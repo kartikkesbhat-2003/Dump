@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dump-2.onrender.com";
 
 // AUTH ENDPOINTS
 export const authEndpoints = {
