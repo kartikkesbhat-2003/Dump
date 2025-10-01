@@ -51,7 +51,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use(cors({
-  origin: "https://dumpp.onrender.com",
+  origin: "https://dumppp.onrender.com",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
