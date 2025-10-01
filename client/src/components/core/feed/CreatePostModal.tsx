@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Image, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Image, User, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,7 +37,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   onSuccess
 }) => {
   const dispatch = useDispatch();
-  const { token, user } = useSelector((state: any) => state.auth);
+  const { token } = useSelector((state: any) => state.auth);
   
   const [formData, setFormData] = useState<FormData>({
     title: '',
