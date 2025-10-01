@@ -56,7 +56,7 @@ dotenv.config();
 // Configure CORS
 const corsOptions = {
   origin: [
-    "https://dump-frontend.onrender.com",
+    "https://dump-frontend-q1mu.onrender.com/",
     "https://dumppp-api1.onrender.com", // Allow API domain too
     "http://localhost:5173", // For local development
     "http://localhost:3000"  // Alternative local port
