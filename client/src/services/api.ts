@@ -1,4 +1,4 @@
-const BASE_URL = "https://dump-3.onrender.com";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "https://dump-3.onrender.com";
 
 // AUTH ENDPOINTS
 export const authEndpoints = {

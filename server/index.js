@@ -50,12 +50,43 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-app.use(cors({
-  origin: "https://dumppp.onrender.com",
+const dotenv = require("dotenv");
+dotenv.config();
+
+// Configure CORS
+const corsOptions = {
+  origin: [
+    "https://dumppp.onrender.com",
+    "http://localhost:5173", // For local development
+    "http://localhost:3000"  // Alternative local port
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}))
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200, // For legacy browser support
+  maxAge: 14400
+};
+
+// Add environment-specific origins if available
+if (process.env.CORS_ORIGIN) {
+  try {
+    const envOrigins = JSON.parse(process.env.CORS_ORIGIN);
+    corsOptions.origin = corsOptions.origin.concat(envOrigins);
+  } catch (error) {
+    console.warn("Failed to parse CORS_ORIGIN environment variable:", error);
+  }
+}
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 
 app.use(
   fileUpload({
@@ -64,27 +95,11 @@ app.use(
   })
 );
 
-
-const dotenv = require("dotenv");
-dotenv.config();
-
 const PORT = process.env.PORT || 5000;
 database.connect();
 
 app.use(express.json());
 app.use(cookieParser());
-
-const whitelist = process.env.CORS_ORIGIN
-  ? JSON.parse(process.env.CORS_ORIGIN)
-  : ["*"];
-
-app.use(
-  cors({
-    origin: whitelist,
-    credentials: true,
-    maxAge: 14400,
-  })
-);
 
 cloudnairyconnect();
 
