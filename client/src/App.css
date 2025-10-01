@@ -1,0 +1,15 @@
+html, body{
+    overflow-x: hidden;
+    overscroll-behavior: auto;
+    background-color: var(--background);
+}
+
+/* Set dark theme as default by adding dark class to html */
+html {
+    color-scheme: dark;
+}
+
+html:not(.light) {
+    --background: #000000;
+    --foreground: #ffffff;
+}
