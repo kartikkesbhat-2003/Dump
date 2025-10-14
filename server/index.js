@@ -34,7 +34,9 @@ const corsOptions = {
     "Authorization", 
     "X-Requested-With",
     "Accept",
-    "Origin"
+    "Origin",
+    "Access-Control-Request-Method",
+    "Access-Control-Request-Headers"
   ],
   credentials: true,
   optionsSuccessStatus: 200, // For legacy browser support
