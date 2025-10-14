@@ -4,12 +4,15 @@ import { PostCard } from '@/components/core/feed/PostCard';
 import { getUserPosts, votePost } from '@/services/operations/postAPI';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface UserPostsListProps {
   userId?: string;
 }
 
 export const UserPostsList: React.FC<UserPostsListProps> = ({ userId }) => {
+
+  const navigate = useNavigate();
   const { token } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch();
   const [posts, setPosts] = useState<any[]>([]);
@@ -126,7 +129,7 @@ export const UserPostsList: React.FC<UserPostsListProps> = ({ userId }) => {
         <p className="text-muted-foreground mb-4">
           You haven't created any posts yet. Share your thoughts with the community!
         </p>
-        <Button onClick={() => window.location.href = '/create-post'}>
+        <Button onClick={() => navigate('/create-post')}>
           Create Your First Post
         </Button>
       </div>

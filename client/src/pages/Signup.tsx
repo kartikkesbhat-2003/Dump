@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { setSignupData } from "@/slices/authSlice";
 import { sendOtp } from "@/services/operations/authAPI";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const Signup = () => {
   const dispatch = useDispatch<any>();
@@ -239,12 +240,12 @@ export const Signup = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="font-medium text-primary hover:underline"
             >
               Sign in
-            </a>
+            </Link>
           </p>
         </CardFooter>
       </Card>

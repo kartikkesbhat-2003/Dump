@@ -3,6 +3,7 @@ import { Plus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface CreatePostButtonProps {
   onCreatePost?: () => void;
@@ -48,18 +49,18 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
             Sign up or log in to share your thoughts with the community
           </p>
           <div className="flex gap-3 justify-center">
-            <Button 
-              onClick={() => navigate("/signup")}
+            <Link 
+              to="/signup"
               className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Sign Up
-            </Button>
-            <Button 
-              onClick={() => navigate("/login")}
+            </Link>
+            <Link 
+              to="/login"
               className="border border-border px-6 py-2 rounded-lg hover:bg-accent transition-colors"
             >
               Log In
-            </Button>
+            </Link>
           </div>
         </div>
       );

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { login } from "@/services/operations/authAPI";
+import { Link } from "react-router-dom";
 
 interface LoginData {
   email: string;
@@ -232,12 +233,12 @@ export const Login = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <a
-              href="/signup"
+            <Link
+              to="/signup"
               className="font-medium text-primary hover:underline"
             >
               Sign up
-            </a>
+            </Link>
           </p>
         </CardFooter>
       </Card>
