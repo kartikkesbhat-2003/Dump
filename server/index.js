@@ -18,7 +18,7 @@ const corsOptions = {
     "https://dumppp-api1.onrender.com", // Allow API domain too
     "http://localhost:5173", // For local development
     "http://localhost:3000",  // Alternative local port
-    "https://dump-eight.vercel.app/"
+    "https://dump-eight.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
