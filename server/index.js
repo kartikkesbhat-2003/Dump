@@ -1,10 +1,7 @@
 const express = require("express");
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
-const passport = require("passport");
 const session = require("express-session");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { googleOAuthHandler } = require("./controllers/auth");
 const fileUpload = require("express-fileupload");
 const { cloudnairyconnect } = require("./config/cloudinary");
 
@@ -19,36 +16,6 @@ app.use(session({
     cookie: { secure: false } // Set to true in production with HTTPS
 }))
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback"
-}, async (accessToken, refreshToken, profile, done) => {
-    try {
-        const user = await googleOAuthHandler(profile);
-        return done(null, user);
-    } catch (error) {
-        console.error("Error in Google OAuth strategy:", error);
-        return done(error, null);
-    }
-}));
-
-passport.serializeUser((user, done) => {
-    done(null, user._id);
-});
-
-passport.deserializeUser(async (id, done) => {
-    try {
-        const User = require("./models/User");
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (error) {
-        done(error, null);
-    }
-});
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -74,30 +41,8 @@ const corsOptions = {
   maxAge: 14400
 };
 
-// Add environment-specific origins if available
-if (process.env.CORS_ORIGIN) {
-  try {
-    const envOrigins = JSON.parse(process.env.CORS_ORIGIN);
-    corsOptions.origin = corsOptions.origin.concat(envOrigins);
-  } catch (error) {
-    console.warn("Failed to parse CORS_ORIGIN environment variable:", error);
-  }
-}
 
 app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly for all routes
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '14400');
-    return res.status(200).end();
-  }
-  next();
-});
 
 app.use(
   fileUpload({
