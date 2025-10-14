@@ -1,6 +1,7 @@
 // components/ui/CTAButton.tsx
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface CTAButtonProps {
@@ -38,12 +39,12 @@ export const CTAButton = ({
   const navigate = useNavigate();
 
   return (
-    <button
+    <Button
       onClick={() => navigate(href)}
       className={cn(baseStyles, variants[variant], sizes[size], className)}
     >
       {icon && <span className="h-4 w-4 flex-shrink-0">{icon}</span>}
       <span className="truncate">{label}</span>
-    </button>
+    </Button>
   );
 };

@@ -48,18 +48,18 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
             Sign up or log in to share your thoughts with the community
           </p>
           <div className="flex gap-3 justify-center">
-            <button 
+            <Button 
               onClick={() => navigate("/signup")}
               className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Sign Up
-            </button>
-            <button 
+            </Button>
+            <Button 
               onClick={() => navigate("/login")}
               className="border border-border px-6 py-2 rounded-lg hover:bg-accent transition-colors"
             >
               Log In
-            </button>
+            </Button>
           </div>
         </div>
       );
