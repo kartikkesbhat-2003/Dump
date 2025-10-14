@@ -91,18 +91,6 @@ export const Feed = () => {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
           <div className="space-y-6">
-            {/* Feed Header */}
-            <div className="border-b border-border pb-4">
-              <h1 className="text-2xl font-bold">
-                {token ? "Your Feed" : "Welcome to Your App"}
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {token 
-                  ? "Stay updated with the latest from your network" 
-                  : "Sign in to see your personalized feed"
-                }
-              </p>
-            </div>
 
             {token ? (
               /* Authenticated Feed Content */ 
