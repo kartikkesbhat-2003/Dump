@@ -1,37 +1,28 @@
 const express = require("express");
+const dotenv = require("dotenv");
+dotenv.config();
+
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const fileUpload = require("express-fileupload");
 const { cloudnairyconnect } = require("./config/cloudinary");
 
-
-const app = express();
 const cors = require("cors");
+const app = express();
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true in production with HTTPS
-}))
-
-
-const dotenv = require("dotenv");
-dotenv.config();
-
-// Configure CORS
+// Configure CORS early so preflight (OPTIONS) and other middleware get the headers
 const corsOptions = {
   origin: [
-    "https://dump-frontend-q1mu.onrender.com/",
+    "https://dump-frontend-q1mu.onrender.com",
     "https://dumppp-api1.onrender.com", // Allow API domain too
     "http://localhost:5173", // For local development
     "http://localhost:3000"  // Alternative local port
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
+    "Content-Type",
+    "Authorization",
     "X-Requested-With",
     "Accept",
     "Origin",
@@ -43,8 +34,17 @@ const corsOptions = {
   maxAge: 14400
 };
 
-
 app.use(cors(corsOptions));
+// Ensure preflight requests receive CORS headers
+// Use a regex route to match all paths so path-to-regexp is not asked to parse a wildcard string
+app.options(/.*/, cors(corsOptions));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true in production with HTTPS
+}))
 
 app.use(
   fileUpload({
