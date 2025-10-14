@@ -44,8 +44,8 @@ export const Navbar = () => {
           }`}
         >
           {/* Logo */}
-          <a href="/" className="font-bold text-base sm:text-lg">
-            Your Logo
+          <a href="/" className="flex items-center font-bold text-base sm:text-lg">
+            <span>Dump</span>
           </a>
 
           {/* Desktop Search Bar - Only show when logged in */}

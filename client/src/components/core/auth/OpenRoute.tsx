@@ -9,7 +9,7 @@ function OpenRoute({ children }: { children: ReactNode }) {
   if (token === null) {
     return children
   } else {
-    return <Navigate to="/dashboard/profile" />
+    return <Navigate to="/profile" />
   }
 }
 

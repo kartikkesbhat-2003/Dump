@@ -14,6 +14,7 @@ import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
 import { Help } from '@/pages/Help'
 import PrivateRoute from '@/components/core/auth/PrivateRoute'
+import OpenRoute from './components/core/auth/OpenRoute'
 
 function App() {
 
@@ -33,9 +34,11 @@ function App() {
           </MainLayout>
         }/>
         <Route path='/create-post' element={
-          <MainLayout>
-            <CreatePost />
-          </MainLayout>
+          <PrivateRoute>
+            <MainLayout>
+              <CreatePost />
+            </MainLayout>
+          </PrivateRoute>
         }/>
         <Route path='/profile' element={
           <PrivateRoute>
@@ -63,17 +66,23 @@ function App() {
         {/* Auth routes without navigation */}
         <Route path='/signup' element={
           <AuthLayout>
+            <OpenRoute>
             <Signup />
+            </OpenRoute>
           </AuthLayout>
         }/>
         <Route path='/login' element={
           <AuthLayout>
+            <OpenRoute>
             <Login />
+            </OpenRoute>
           </AuthLayout>
         }/>
         <Route path='/verify-email' element={
           <AuthLayout>
-            <VerifyOtp />
+            <OpenRoute>
+              <VerifyOtp />
+            </OpenRoute>
           </AuthLayout>
         }/>
       </Routes>
