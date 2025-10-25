@@ -1,4 +1,7 @@
-const BASE_URL = "https://dumppp-api1.onrender.com";
+// Use secure production URL by default, but use HTTP for local development (localhost)
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const BASE_URL = isLocalhost ? 'http://localhost:5000' : 'https://dumppp-api1.onrender.com';
+
 
 // AUTH ENDPOINTS
 export const authEndpoints = {
