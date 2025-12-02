@@ -1,60 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProfileHeader } from '@/components/core/profile/ProfileHeader';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { PublicProfileHeader } from '@/components/core/profile/PublicProfileHeader';
 import { UserPostsList } from '@/components/core/profile/UserPostsList';
-import { getCurrentUser, getUserStats } from '@/services/operations/profileAPI';
+import { apiConnector } from '@/services/apiConnector';
+import { userEndpoints } from '@/services/api';
 
-export const Profile: React.FC = () => {
-  const { user, loading: profileLoading } = useSelector((state: any) => state.profile);
-  const dispatch = useDispatch();
+type PublicProfile = {
+  _id: string;
+  username: string;
+  joinedAt?: string;
+  postsCount?: number;
+};
 
-  const [loading, setLoading] = useState(true);
+export const PublicProfilePage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    postsCount: 0,
-    totalUpvotes: 0,
-    totalDownvotes: 0,
-    joinedDate: new Date().toISOString(),
-  });
 
   useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    apiConnector('GET', userEndpoints.GET_PUBLIC_PROFILE(id))
+      .then((res: any) => setProfile(res.data?.user || null))
+      .catch((err) => {
+        console.error('Error fetching public profile', err);
+        setProfile(null);
+        setError('Failed to load profile');
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
-        if (!user) {
-          await dispatch(getCurrentUser() as any);
-        }
-
-        const userStats = await dispatch(getUserStats() as any);
-        setStats(userStats);
-      } catch (fetchError) {
-        console.error('Error fetching profile data:', fetchError);
-        setError('Failed to load profile data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, [dispatch, user]);
-
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
-  const codename = user?.email.split('@')[0] ?? 'traveler';
+  if (!id) return <MainLayout><div className="p-6">Invalid user</div></MainLayout>;
 
   const renderContent = () => {
-    if (loading || profileLoading) {
+    if (loading) {
       return (
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-10 text-center text-white shadow-[0_15px_60px_rgba(0,0,0,0.45)]">
           <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-white" />
           <p className="text-sm uppercase tracking-[0.4em] text-white/50">Synchronizing</p>
-          <p className="mt-2 text-base text-white/80">Loading your profile signature...</p>
+          <p className="mt-2 text-base text-white/80">Loading public profile...</p>
         </div>
       );
     }
@@ -68,7 +57,7 @@ export const Profile: React.FC = () => {
           </div>
           <p className="mt-3 text-white/80">{error}</p>
           <Button
-            onClick={handleRetry}
+            onClick={() => window.location.reload()}
             variant="ghost"
             className="mt-6 rounded-full border border-white/30 bg-white/10 px-6 text-white hover:bg-white/20"
           >
@@ -78,30 +67,25 @@ export const Profile: React.FC = () => {
       );
     }
 
-    if (!user) {
+    if (!profile) {
       return (
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 text-center text-white shadow-[0_15px_60px_rgba(0,0,0,0.45)]">
           <AlertCircle className="mx-auto h-6 w-6 text-white/60" />
-          <p className="mt-4 text-sm uppercase tracking-[0.4em] text-white/50">No data</p>
-          <p className="mt-2 text-white/80">Unable to resolve your profile payload. Refresh to attempt again.</p>
-          <Button
-            onClick={handleRetry}
-            variant="ghost"
-            className="mt-6 rounded-full border border-white/30 bg-white/5 px-6 text-white hover:bg-white/15"
-          >
-            Refresh
-          </Button>
+          <p className="mt-4 text-sm uppercase tracking-[0.4em] text-white/50">Not found</p>
+          <p className="mt-2 text-white/80">We couldn't find this profile.</p>
         </div>
       );
     }
 
     return (
       <div className="space-y-12">
-        <ProfileHeader user={user} stats={stats} />
-        <UserPostsList userId={user._id} />
+        <PublicProfileHeader user={profile} />
+        <UserPostsList userId={profile._id} />
       </div>
     );
   };
+
+  const codename = profile?.username ?? 'traveler';
 
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden bg-gradient-to-b from-background via-background/95 to-black px-3 py-10 sm:px-6">
@@ -121,8 +105,9 @@ export const Profile: React.FC = () => {
 
       <div className="relative z-10 mx-auto max-w-4xl space-y-10">
         <div className="rounded-[36px] border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-8 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
-          <p className="text-xs uppercase tracking-[0.5em] text-white/45">Profile Console</p>
-          <h1 className="mt-3 text-3xl font-extralight">{codename}'s orbit.</h1>
+          <p className="text-xs uppercase tracking-[0.5em] text-white/45">Public Profile</p>
+          <h1 className="mt-3 text-3xl font-extralight">{codename}'s signature.</h1>
+         
         </div>
 
         <div className="space-y-10 text-white">
@@ -132,3 +117,5 @@ export const Profile: React.FC = () => {
     </section>
   );
 };
+
+export default PublicProfilePage;

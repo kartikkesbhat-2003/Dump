@@ -390,9 +390,9 @@ export const Trending: React.FC = () => {
                                 <ArrowUp className="h-3 w-3" />
                                 {post.upvotes}
                               </span>
-                              <span className="flex items-center gap-1 text-red-600">
+                              <span className="flex items-center gap-1 text-red-600" aria-hidden>
                                 <ArrowDown className="h-3 w-3" />
-                                {post.downvotes}
+                                {/* downvote count hidden per UX */}
                               </span>
                               <span>{post.commentsCount} comments</span>
                             </div>

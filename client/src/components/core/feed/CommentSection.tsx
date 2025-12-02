@@ -58,11 +58,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const fetchComments = async (page = 1) => {
     try {
       setLoading(true);
-      console.log('Fetching comments for postId:', postId, 'page:', page);
       const response = await dispatch(getPostComments({ postId, page, limit: 10 }) as any);
-      console.log('Comments API response:', response);
-      console.log('Response type:', typeof response);
-      console.log('Response payload:', response?.payload);
       
       // Check if response is from rejected action
       if (response?.type?.endsWith('/rejected')) {
@@ -77,8 +73,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         hasNext: false,
       };
       
-      console.log('Extracted comments data:', commentsData);
-      console.log('Comments data length:', commentsData.length);
+      // comments data extracted
       
       if (page === 1) {
         setComments(commentsData);
@@ -86,7 +81,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         setComments(prev => [...(prev || []), ...commentsData]);
       }
       setPagination(paginationData);
-      console.log('Comments state updated:', commentsData.length, 'comments');
+      // comments state updated
     } catch (error) {
       console.error('Error fetching comments:', error);
       // Reset to empty array on error
@@ -322,7 +317,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     
     // Local state for vote counts and user vote to handle optimistic updates
     const [localUpvotes, setLocalUpvotes] = useState(comment.upvotes || 0);
-    const [localDownvotes, setLocalDownvotes] = useState(comment.downvotes || 0);
+    const [ , setLocalDownvotes] = useState(comment.downvotes || 0);
     const [localUserVote, setLocalUserVote] = useState<'upvote' | 'downvote' | null>(comment.userVote || null);
     
     // Local state for reply form
@@ -445,40 +440,47 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       }
     };
 
+    const indentation = isReply ? 'ml-8 pl-6 border-l border-white/10' : 'pl-6';
     return (
-      <div className={`${isReply ? 'ml-8 border-l-2 border-muted pl-4' : ''} ${isDeleting ? 'opacity-50' : ''} ${isOptimistic ? 'opacity-70 bg-muted/20 rounded-lg p-2' : ''}`}>
-        <div className="flex gap-3 py-3">
-          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+      <div className={`${indentation} ${isDeleting ? 'opacity-50' : ''} ${isOptimistic ? 'opacity-70' : ''}`}>
+        <div className="relative flex gap-3 py-4">
+          <span
+            className="pointer-events-none absolute -left-3 top-4 h-2 w-2 rounded-full bg-white/60 shadow-[0_0_15px_rgba(255,255,255,0.45)]"
+            aria-hidden
+          />
+          {!isReply && (
+            <span className="pointer-events-none absolute -left-8 top-5 hidden h-px w-6 bg-white/15 sm:block" aria-hidden />
+          )}
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[0.65rem] uppercase tracking-[0.3em] text-white/70">
             {comment.isAnonymous ? (
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User className="h-4 w-4" />
             ) : (
-              <span className="text-xs font-medium">{getInitials(comment.user, comment.isAnonymous)}</span>
+              <span>{getInitials(comment.user, comment.isAnonymous)}</span>
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
+            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/40">
+              <div className="flex flex-wrap items-center gap-2 text-white/70">
+                <span className="text-sm font-medium text-white/90 tracking-normal">
                   {getDisplayName(comment.user, comment.isAnonymous)}
                 </span>
                 {comment.isAnonymous && (
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[0.55rem] uppercase tracking-[0.3em] text-white/50">
                     Anonymous
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground">
-                  {isOptimistic ? 'Posting...' : formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                <span className="text-[0.6rem] uppercase tracking-[0.35em] text-white/40">
+                  {isOptimistic ? 'Posting…' : formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </span>
               </div>
 
-              {/* Comment Menu */}
               {canDeleteComment(comment) && !isOptimistic && (
                 <div className="relative">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                    className="h-6 w-6 rounded-full border border-white/10 p-0 text-white/60 hover:text-white"
                     onClick={() => setShowMenu(!showMenu)}
                     disabled={isDeleting}
                   >
@@ -486,14 +488,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   </Button>
 
                   {showMenu && (
-                    <div className="absolute right-0 top-6 bg-background border border-border rounded-lg shadow-lg py-1 z-10 min-w-32">
+                    <div className="absolute right-0 top-8 min-w-32 rounded-2xl border border-white/10 bg-background/80 px-3 py-2 text-left text-xs uppercase tracking-[0.3em] text-white/60 backdrop-blur">
                       <button
                         onClick={() => {
                           handleDeleteComment(comment._id);
                           setShowMenu(false);
                         }}
                         disabled={isDeleting}
-                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        className="flex w-full items-center gap-2 text-red-400 transition hover:text-red-200"
                       >
                         <Trash2 className="h-3 w-3" />
                         Delete
@@ -501,119 +503,106 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                     </div>
                   )}
 
-                  {/* Backdrop to close menu */}
                   {showMenu && (
-                    <div 
-                      className="fixed inset-0 z-5" 
-                      onClick={() => setShowMenu(false)}
-                    />
+                    <div className="fixed inset-0" onClick={() => setShowMenu(false)} />
                   )}
                 </div>
               )}
             </div>
-            
-            <p className="text-sm text-foreground mb-2">{comment.content}</p>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-6 px-1 ${
-                    localUserVote === 'upvote'
-                      ? 'text-green-600 bg-green-50'
-                      : 'text-muted-foreground hover:text-green-600'
-                  }`}
-                  onClick={() => handleVoteComment(comment._id, 'upvote')}
-                  disabled={!token || isDeleting || isOptimistic}
-                >
-                  <ArrowUp className={`h-3 w-3 mr-1 ${localUserVote === 'upvote' ? 'fill-green-600' : ''}`} />
-                  <span className="text-xs">{localUpvotes}</span>
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-6 px-1 ${
-                    localUserVote === 'downvote'
-                      ? 'text-red-600 bg-red-50'
-                      : 'text-muted-foreground hover:text-red-600'
-                  }`}
-                  onClick={() => handleVoteComment(comment._id, 'downvote')}
-                  disabled={!token || isDeleting || isOptimistic}
-                >
-                  <ArrowDown className={`h-3 w-3 mr-1 ${localUserVote === 'downvote' ? 'fill-red-600' : ''}`} />
-                  <span className="text-xs">{localDownvotes}</span>
-                </Button>
-              </div>
-              
+
+            <p className="mt-2 text-sm leading-relaxed text-white/80">{comment.content}</p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.65rem] uppercase tracking-[0.3em] text-white/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-7 rounded-full border border-white/10 px-3 text-white/60 transition ${
+                  localUserVote === 'upvote' ? 'bg-white/10 text-white border-white/30' : 'hover:text-white'
+                } ${!token || isDeleting || isOptimistic ? 'opacity-40 cursor-not-allowed' : ''}`}
+                onClick={() => handleVoteComment(comment._id, 'upvote')}
+                disabled={!token || isDeleting || isOptimistic}
+              >
+                <ArrowUp className="mr-2 h-3 w-3" />
+                {localUpvotes}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-7 rounded-full border border-white/10 px-3 text-white/60 transition ${
+                  localUserVote === 'downvote' ? 'bg-white/10 text-white border-white/30' : 'hover:text-white'
+                } ${!token || isDeleting || isOptimistic ? 'opacity-40 cursor-not-allowed' : ''}`}
+                onClick={() => handleVoteComment(comment._id, 'downvote')}
+                disabled={!token || isDeleting || isOptimistic}
+              >
+                <ArrowDown className="mr-2 h-3 w-3" />
+                {/* downvote count hidden per UX */}
+              </Button>
+
               {!isReply && token && !isOptimistic && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-muted-foreground hover:text-blue-600"
+                  className="h-7 rounded-full border border-white/10 px-4 text-white/60 transition hover:text-white"
                   onClick={() => setShowReplyForm(!showReplyForm)}
                   disabled={isDeleting}
                 >
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  <span className="text-xs">Reply</span>
+                  <MessageCircle className="mr-2 h-3 w-3" />
+                  Reply
                 </Button>
               )}
             </div>
-            
-            {/* Reply Form */}
+
             {showReplyForm && !isDeleting && (
-              <form onSubmit={handleCreateReply} className="mt-3">
-                <div className="flex gap-2">
-                  <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium">Y</span>
-                  </div>
-                  <div className="flex-1">
-                    <textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder="Write a reply..."
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                      rows={2}
+              <form onSubmit={handleCreateReply} className="mt-4 space-y-3">
+                <textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="Drop a reply"
+                  className="w-full resize-none rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/40"
+                  rows={2}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/50">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymousReply}
+                      onChange={(e) => setIsAnonymousReply(e.target.checked)}
+                      className="rounded border-white/20 bg-transparent"
                     />
-                    <div className="flex items-center justify-between mt-2">
-                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={isAnonymousReply}
-                          onChange={(e) => setIsAnonymousReply(e.target.checked)}
-                          className="rounded"
-                        />
-                        Reply anonymously
-                      </label>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setShowReplyForm(false);
-                            setReplyContent('');
-                            setIsAnonymousReply(false);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit" size="sm" disabled={!replyContent.trim() || isCreatingReply}>
-                          {isCreatingReply ? 'Replying...' : 'Reply'}
-                        </Button>
-                      </div>
-                    </div>
+                    Reply anonymously
+                  </label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full px-4 text-white/60 hover:text-white"
+                      onClick={() => {
+                        setShowReplyForm(false);
+                        setReplyContent('');
+                        setIsAnonymousReply(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="rounded-full px-5"
+                      disabled={!replyContent.trim() || isCreatingReply}
+                    >
+                      {isCreatingReply ? 'Replying…' : 'Reply'}
+                    </Button>
                   </div>
                 </div>
               </form>
             )}
-            
-            {/* Replies */}
+
             {comment.replies && comment.replies.length > 0 && (
-              <div className="mt-3">
+              <div className="mt-2 space-y-2">
                 {comment.replies
-                  .filter(reply => reply && reply._id) // Filter out invalid replies
+                  .filter(reply => reply && reply._id)
                   .map((reply) => (
                     <CommentItem key={reply._id} comment={reply} isReply={true} />
                   ))}
@@ -628,90 +617,83 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="border-t border-border bg-card">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm">Comments</h3>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Hide
-          </Button>
-        </div>
+    <div className="pt-6 text-white/80">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.35em] text-white/40">
+        <span>Comment Stream</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-full border border-white/10 px-4 text-white/60 hover:text-white"
+          onClick={onClose}
+        >
+          Hide
+        </Button>
+      </div>
 
-        {/* Comment Form */}
-        {token && (
-          <form onSubmit={handleCreateComment} className="mb-6">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-medium">Y</span>
+      {token && (
+        <form onSubmit={handleCreateComment} className="mb-8 space-y-3">
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="What's your take?"
+            className="w-full resize-none rounded-3xl border border-white/10 bg-transparent px-5 py-4 text-sm text-white/80 outline-none transition focus:border-white/40"
+            rows={3}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/50">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="rounded border-white/20 bg-transparent"
+              />
+              Comment anonymously
+            </label>
+            <Button
+              type="submit"
+              size="sm"
+              className="rounded-full px-6"
+              disabled={!newComment.trim() || isCreatingComment}
+            >
+              <Send className="mr-2 h-3 w-3" />
+              {isCreatingComment ? 'Posting…' : 'Comment'}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      <div className="space-y-1">
+        {loading && (!comments || comments.length === 0) ? (
+          <div className="py-6 text-center text-sm text-white/50">Loading comments…</div>
+        ) : comments && comments.length > 0 ? (
+          <>
+            {comments
+              .filter(comment => comment && comment._id)
+              .map((comment) => (
+                <CommentItem key={comment._id} comment={comment} />
+              ))}
+
+            {pagination?.hasNext && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full border border-white/10 px-6 text-white/60 hover:text-white"
+                  onClick={() => fetchComments(pagination.currentPage + 1)}
+                  disabled={loading}
+                >
+                  Load more
+                </Button>
               </div>
-              <div className="flex-1">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows={3}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="rounded"
-                    />
-                    Comment anonymously
-                  </label>
-                  <Button type="submit" size="sm" disabled={!newComment.trim() || isCreatingComment}>
-                    <Send className="h-3 w-3 mr-1" />
-                    {isCreatingComment ? 'Posting...' : 'Comment'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </form>
+            )}
+          </>
+        ) : (
+          <div className="py-8 text-center text-sm text-white/50">
+            <MessageCircle className="mx-auto mb-3 h-6 w-6" />
+            <p>No comments yet.</p>
+            {token && <p className="mt-1 text-xs uppercase tracking-[0.35em]">Be first.</p>}
+          </div>
         )}
-
-        {/* Comments List */}
-        <div className="space-y-1">
-          {loading && (!comments || comments.length === 0) ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">Loading comments...</p>
-            </div>
-          ) : comments && comments.length > 0 ? (
-            <>
-              {console.log('Rendering comments section - comments count:', comments.length)}
-              {comments
-                .filter(comment => comment && comment._id) // Filter out invalid comments
-                .map((comment) => (
-                  <CommentItem key={comment._id} comment={comment} />
-                ))}
-              
-              {pagination?.hasNext && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => fetchComments(pagination.currentPage + 1)}
-                    disabled={loading}
-                  >
-                    Load more comments
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="text-center py-8">
-                <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No comments yet</p>
-                {token && (
-                  <p className="text-xs text-muted-foreground mt-1">Be the first to comment!</p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
       </div>
     </div>
   );

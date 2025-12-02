@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
 const Vote = require("../models/Vote");
 const Comment = require("../models/Comment");
+const { createNotification } = require('./notifications');
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
 // Create a new post
@@ -349,6 +350,18 @@ exports.votePost = async (req, res) => {
                 // Update vote type
                 existingVote.voteType = voteType;
                 await existingVote.save();
+                // Notify post owner when vote type changes (e.g., switched to upvote/downvote)
+                try {
+                    await createNotification({
+                        userId: post.user,
+                        actorId: userId,
+                        type: 'vote',
+                        message: `${voteType === 'upvote' ? 'Upvoted' : 'Downvoted'} your post: ${post.title?.slice(0, 120)}`,
+                        postId: post._id
+                    });
+                } catch (err) {
+                    console.error('Failed to create vote-change notification:', err);
+                }
                 return res.status(200).json({
                     success: true,
                     message: "Vote updated"
@@ -364,6 +377,19 @@ exports.votePost = async (req, res) => {
         });
         await vote.save();
 
+                // Notify post owner on vote (upvote or downvote)
+                try {
+                    await createNotification({
+                        userId: post.user,
+                        actorId: userId,
+                        type: 'vote',
+                        message: `${voteType === 'upvote' ? 'Upvoted' : 'Downvoted'} your post: ${post.title?.slice(0, 120)}`,
+                        postId: post._id
+                    });
+                } catch (err) {
+                    console.error('Failed to create vote notification:', err);
+                }
+
         res.status(201).json({
             success: true,
             message: "Vote added successfully"
@@ -375,5 +401,58 @@ exports.votePost = async (req, res) => {
             message: "Error voting on post",
             error: error.message,
         });
+    }
+};
+
+// Get posts by a specific user id (public view). If the viewer is not the owner, hide anonymous posts.
+exports.getPostsByUserId = async (req, res) => {
+    try {
+        const targetUserId = req.params.userId;
+        const viewerId = req.user?.userId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const query = { user: targetUserId };
+        if (!viewerId || viewerId.toString() !== targetUserId.toString()) {
+            // hide anonymous posts for other viewers
+            query.isAnonymous = false;
+        }
+
+        const posts = await Post.find(query)
+            .populate('user', 'email')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Attach votes/comments similar to getAllPosts
+        const postsWithVotes = await Promise.all(posts.map(async (post) => {
+            const upvotes = await Vote.countDocuments({ post: post._id, voteType: 'upvote' });
+            const downvotes = await Vote.countDocuments({ post: post._id, voteType: 'downvote' });
+            const comments = await Comment.countDocuments({ post: post._id });
+
+            let userVote = null;
+            if (viewerId) {
+                const vote = await Vote.findOne({ post: post._id, user: viewerId });
+                userVote = vote ? vote.voteType : null;
+            }
+
+            return {
+                ...post.toObject(),
+                upvotes,
+                downvotes,
+                totalVotes: upvotes - downvotes,
+                commentsCount: comments,
+                userVote
+            };
+        }));
+
+        const totalPosts = await Post.countDocuments(query);
+        const totalPages = Math.ceil(totalPosts / limit);
+
+        res.status(200).json({ success: true, posts: postsWithVotes, pagination: { currentPage: page, totalPages, totalPosts, hasNext: page < totalPages, hasPrev: page > 1 } });
+    } catch (err) {
+        console.error('Error fetching posts by user id', err);
+        res.status(500).json({ success: false, message: 'Error fetching posts' });
     }
 };

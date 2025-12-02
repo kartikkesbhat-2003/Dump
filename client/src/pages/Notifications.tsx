@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, MessageCircle, ThumbsUp, Users, Settings, CheckCheck } from 'lucide-react';
+import { Bell, MessageCircle, ThumbsUp, Users, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { formatDistanceToNow } from 'date-fns';
 import { useSelector } from 'react-redux';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/services/operations/notificationAPI';
+import { initSocket } from '@/lib/socket';
 
 interface Notification {
   id: string;
@@ -30,116 +28,137 @@ interface Notification {
   };
 }
 
-interface NotificationSettings {
-  comments: boolean;
-  votes: boolean;
-  follows: boolean;
-  mentions: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-}
 
 export const Notifications: React.FC = () => {
   const { token } = useSelector((state: any) => state.auth);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
-  const [settings, setSettings] = useState<NotificationSettings>({
-    comments: true,
-    votes: true,
-    follows: true,
-    mentions: true,
-    emailNotifications: false,
-    pushNotifications: true,
-  });
-
-  // Mock notifications data
-  const mockNotifications: Notification[] = [
-    {
-      id: '1',
-      type: 'comment',
-      title: 'New comment on your post',
-      message: 'Someone commented on "Understanding React Hooks"',
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      actionUser: { username: 'john_dev', isAnonymous: false },
-      relatedPost: { id: '1', title: 'Understanding React Hooks' },
-      relatedComment: { id: '1', content: 'Great explanation! This really helped me understand...' }
-    },
-    {
-      id: '2',
-      type: 'vote',
-      title: 'Your post was upvoted',
-      message: '5 people upvoted your post',
-      isRead: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-      relatedPost: { id: '2', title: 'JavaScript Best Practices' }
-    },
-    {
-      id: '3',
-      type: 'follow',
-      title: 'New follower',
-      message: 'started following you',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-      actionUser: { username: 'sarah_codes', isAnonymous: false }
-    },
-    {
-      id: '4',
-      type: 'mention',
-      title: 'You were mentioned',
-      message: 'mentioned you in a comment',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-      actionUser: { username: 'mike_dev', isAnonymous: false },
-      relatedPost: { id: '3', title: 'React vs Vue Comparison' }
-    },
-    {
-      id: '5',
-      type: 'post_liked',
-      title: 'Your post gained popularity',
-      message: 'Your post reached 100 upvotes!',
-      isRead: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
-      relatedPost: { id: '4', title: 'Building Scalable APIs' }
-    }
-  ];
+  // showOnlyUnread removed per UX request; display both read and unread
+  const [initialUnreadIds, setInitialUnreadIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (token) {
       fetchNotifications();
     }
+    // subscribe to socket
+    let s: ReturnType<typeof initSocket> | null = null;
+    const parsed = (() => {
+      try { return JSON.parse(localStorage.getItem('token') || '""'); } catch { return localStorage.getItem('token') || ''; }
+    })();
+    try {
+      s = initSocket(parsed);
+      const handler = (n: any) => {
+        // prepend new notification
+        const mapped = {
+          id: n._id,
+          type: n.type,
+          title: n.type === 'comment' ? 'New comment on your post' : n.type === 'vote' ? 'Your post was upvoted' : 'Activity',
+          message: n.message || '',
+          isRead: n.isRead,
+          createdAt: n.createdAt,
+          actionUser: n.actor ? { username: n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+          relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
+          relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
+        };
+        setNotifications(prev => [mapped, ...prev]);
+      };
+      s.on('notification', handler);
+      return () => {
+        s && s.off('notification', handler);
+      };
+    } catch (e) {
+      // ignore
+      return;
+    }
   }, [token]);
 
   const fetchNotifications = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setNotifications(mockNotifications);
+    try {
+      const res = await getNotifications(1, 200);
+      const data = res?.data?.notifications || [];
+      const mapped = data.map((n: any) => ({
+        id: n._id,
+        type: n.type,
+        title: n.type === 'comment' ? 'New comment on your post' : n.type === 'vote' ? 'Your post was upvoted' : 'Activity',
+        message: n.message || '',
+        isRead: n.isRead,
+        createdAt: n.createdAt,
+        actionUser: n.actor ? { username: n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+        relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
+        relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
+      }));
+      setNotifications(mapped);
+      // capture which notifications were unread when the user opened the page
+      const unreadIds = mapped.filter((m: Notification) => !m.isRead).map((m: Notification) => m.id);
+      setInitialUnreadIds(unreadIds);
+    } catch (err) {
+      console.error('Error fetching notifications', err);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
+  // When the user leaves the Notifications page, mark notifications that were unread when they arrived as read.
+  useEffect(() => {
+    return () => {
+      if (!initialUnreadIds || initialUnreadIds.length === 0) return;
+      // Fire-and-forget: mark each initial unread as read. Server will idempotently handle already-read items.
+      (async () => {
+        try {
+          await Promise.all(initialUnreadIds.map(id => markNotificationAsRead(id).catch(() => {})));
+        } catch (err) {
+          console.error('Error marking initial unread notifications as read on leave', err);
+        }
+      })();
+    };
+    // We intentionally depend only on initialUnreadIds so this cleanup runs with the set captured at mount-time.
+  }, [initialUnreadIds]);
+
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    );
+    // Optimistic update + API call
+    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n));
+    markNotificationAsRead(notificationId).catch(err => console.error(err));
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, isRead: true }))
-    );
+    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
+    markAllNotificationsAsRead().catch(err => console.error(err));
   };
 
-  const getFilteredNotifications = () => {
-    if (activeTab === 'all') return notifications;
-    if (activeTab === 'unread') return notifications.filter(n => !n.isRead);
-    return notifications.filter(n => n.type === activeTab);
+  // Build list for rendering: unread notifications shown individually,
+  // read notifications are either shown individually or grouped (merged) by type+post.
+  const buildRenderList = () => {
+    const unread = notifications.filter(n => !n.isRead).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    const read = notifications.filter(n => n.isRead).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+
+    // Group read notifications by mergeable key (type + relatedPost.id)
+    const groups = new Map();
+    const others: Notification[] = [];
+
+    read.forEach(n => {
+      const mergeable = (n.type === 'vote' || n.type === 'post_liked') && n.relatedPost?.id;
+      if (mergeable) {
+        const key = `${n.type}:${n.relatedPost!.id}`;
+        const g = groups.get(key) || { __group: true, key, groupType: n.type, relatedPost: n.relatedPost, actors: [], count: 0, latest: n.createdAt };
+        g.actors.push(n.actionUser?.username || 'Someone');
+        g.count += 1;
+        if (new Date(n.createdAt) > new Date(g.latest)) g.latest = n.createdAt;
+        groups.set(key, g);
+      } else {
+        others.push(n);
+      }
+    });
+
+    const grouped = Array.from(groups.values()).sort((a: any, b: any) => +new Date(b.latest) - +new Date(a.latest));
+
+    // Render order: unread individual items (newest first), then grouped read summaries, then other read items
+    const renderList: any[] = [];
+    unread.forEach(u => renderList.push(u));
+    grouped.forEach(g => renderList.push(g));
+    others.forEach(o => renderList.push(o));
+
+    return renderList;
   };
 
   const getNotificationIcon = (type: string) => {
@@ -163,249 +182,116 @@ export const Notifications: React.FC = () => {
 
   if (!token) {
     return (
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
-        <Card>
-          <CardContent className="text-center py-8">
-            <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-medium mb-2">Please sign in</h3>
-            <p className="text-sm text-muted-foreground">
-              You need to be signed in to view your notifications
-            </p>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto px-3 py-6">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 text-center text-white">
+          <Bell className="mx-auto mb-4 h-12 w-12 text-white/40" />
+          <h3 className="text-xl font-light">Please sign in</h3>
+          <p className="mt-2 text-white/70">Sign in to view your notifications</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-              <Bell className="h-6 w-6" />
-              Notifications
+    <section className="relative isolate min-h-[100svh] overflow-hidden bg-gradient-to-b from-background via-background/95 to-black px-2 py-10 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-4xl space-y-8">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-extralight flex items-center gap-3">
+                <Bell className="h-6 w-6" /> Notifications
+                {unreadCount > 0 && (
+                  <Badge variant="destructive">{unreadCount}</Badge>
+                )}
+              </h1>
+              <p className="text-sm text-white/60 mt-1">All activity from people and posts you follow, in a single stream.</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* 'Only unread' removed — show both read and unread with different shading */}
               {unreadCount > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {unreadCount}
-                </Badge>
+                <Button variant="ghost" onClick={markAllAsRead} className="rounded-full border border-white/10">
+                  <CheckCheck className="h-4 w-4 mr-2" /> Mark all as read
+                </Button>
               )}
-            </h1>
-            <p className="text-muted-foreground">
-              Stay updated with your latest activity
-            </p>
+            </div>
           </div>
-          {unreadCount > 0 && (
-            <Button variant="outline" onClick={markAllAsRead}>
-              <CheckCheck className="h-4 w-4 mr-2" />
-              Mark all as read
-            </Button>
-          )}
         </div>
 
-        {/* Notification Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="unread">
-              Unread {unreadCount > 0 && `(${unreadCount})`}
-            </TabsTrigger>
-            <TabsTrigger value="comment">Comments</TabsTrigger>
-            <TabsTrigger value="vote">Votes</TabsTrigger>
-            <TabsTrigger value="follow" className="hidden lg:flex">Follows</TabsTrigger>
-            <TabsTrigger value="settings" className="hidden lg:flex">Settings</TabsTrigger>
-          </TabsList>
-
-          {/* All Notifications */}
-          {(activeTab !== 'settings') && (
-            <TabsContent value={activeTab} className="space-y-4">
+        <div className="space-y-6">
+          <div className="relative pl-12">
+            <div className="absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+            <div className="space-y-4">
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="text-muted-foreground mt-2">Loading notifications...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/30 mx-auto"></div>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {getFilteredNotifications().length > 0 ? (
-                    getFilteredNotifications().map((notification) => (
-                      <Card
-                        key={notification.id}
-                        className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                          !notification.isRead ? 'border-l-4 border-l-primary bg-primary/5' : ''
-                        }`}
-                        onClick={() => markAsRead(notification.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 mt-1">
-                              {getNotificationIcon(notification.type)}
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-medium text-sm">
-                                  {notification.title}
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                  {!notification.isRead && (
-                                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                                  )}
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                                  </span>
+                (() => {
+                  const renderList = buildRenderList();
+                  return renderList.length > 0 ? (
+                    renderList.map((item: any) => {
+                      // grouped summary
+                      if (item.__group) {
+                        const primary = item.actors && item.actors.length > 0 ? item.actors[0] : 'Someone';
+                        const others = Math.max(0, item.count - 1);
+                        const title = item.groupType === 'vote' || item.groupType === 'post_liked' ?
+                          `${primary}${others > 0 ? ` and ${others} others` : ''} liked your post` :
+                          `${primary} and ${item.count - 1} others`;
+
+                        return (
+                          <article key={item.key} className="relative ml-2 rounded-[28px] border border-white/10 bg-white/3 p-5 text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                            <div className="absolute left-6 top-7 h-2 w-2 rounded-full bg-white/40" />
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 mt-1 text-white/60"><ThumbsUp className="h-4 w-4" /></div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-sm font-medium text-white/90">{title}</h3>
+                                  <span className="text-xs text-white/50">{formatDistanceToNow(new Date(item.latest), { addSuffix: true })}</span>
                                 </div>
+                                {item.relatedPost && <p className="mt-2 text-sm text-white/60">Post: {item.relatedPost.title}</p>}
+                                <p className="mt-2 text-xs text-white/50">{item.count} total</p>
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-sm text-muted-foreground">
-                                  {notification.actionUser && !notification.actionUser.isAnonymous && (
-                                    <span className="font-medium text-foreground">
-                                      @{notification.actionUser.username}{' '}
-                                    </span>
-                                  )}
-                                  {notification.actionUser && notification.actionUser.isAnonymous && (
-                                    <span className="font-medium text-foreground">
-                                      Anonymous user{' '}
-                                    </span>
-                                  )}
-                                  {notification.message}
-                                </p>
-                                {notification.relatedPost && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Post: {notification.relatedPost.title}
-                                  </p>
-                                )}
-                                {notification.relatedComment && (
-                                  <p className="text-xs text-muted-foreground italic">
-                                    "{notification.relatedComment.content.slice(0, 60)}..."
-                                  </p>
-                                )}
+                            </div>
+                          </article>
+                        );
+                      }
+
+                      // individual notification (unread or read-but-not-merged)
+                      const n: Notification = item;
+                      const isUnread = !n.isRead;
+                      return (
+                        <article key={n.id} className={`relative ml-2 rounded-[28px] border border-white/10 ${isUnread ? 'bg-white/5 ring-1 ring-primary/30' : 'bg-white/3'} p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition`} onClick={() => { if (isUnread) markAsRead(n.id); }}>
+                          <div className={`absolute left-6 top-7 h-2 w-2 rounded-full ${isUnread ? 'bg-white/70 shadow-[0_0_18px_rgba(255,255,255,0.35)]' : 'bg-white/40'}`} />
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 mt-1 text-white/80">{getNotificationIcon(n.type)}</div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h3 className={`text-sm font-medium ${isUnread ? 'text-white' : 'text-white/90'}`}>{n.title}</h3>
+                                <span className="text-xs text-white/50">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</span>
                               </div>
+                              <p className={`mt-2 text-sm ${isUnread ? 'text-white/90' : 'text-white/70'}`}>
+                                {n.actionUser && !n.actionUser.isAnonymous && (<span className="font-medium text-white">@{n.actionUser.username} </span>)}{n.message}
+                              </p>
+                              {n.relatedPost && <p className="mt-2 text-xs text-white/50">Post: {n.relatedPost.title}</p>}
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                        </article>
+                      );
+                    })
                   ) : (
-                    <Card>
-                      <CardContent className="text-center py-8">
-                        <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="font-medium mb-2">No notifications</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {activeTab === 'unread' 
-                            ? "You're all caught up!" 
-                            : "You'll see notifications here when you have activity."
-                          }
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                    <div className="rounded-[28px] border border-white/10 bg-white/5 p-10 text-center text-white">
+                      <Bell className="mx-auto mb-4 h-12 w-12 text-white/40" />
+                      <h3 className="text-lg font-light">No notifications</h3>
+                      <p className="mt-2 text-white/60">You're all caught up.</p>
+                    </div>
+                  );
+                })()
               )}
-            </TabsContent>
-          )}
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Notification Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Activity Notifications</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="comments" className="text-sm">
-                        Comments on your posts
-                      </Label>
-                      <Switch
-                        id="comments"
-                        checked={settings.comments}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, comments: checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="votes" className="text-sm">
-                        Votes on your posts
-                      </Label>
-                      <Switch
-                        id="votes"
-                        checked={settings.votes}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, votes: checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="follows" className="text-sm">
-                        New followers
-                      </Label>
-                      <Switch
-                        id="follows"
-                        checked={settings.follows}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, follows: checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="mentions" className="text-sm">
-                        Mentions in comments
-                      </Label>
-                      <Switch
-                        id="mentions"
-                        checked={settings.mentions}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, mentions: checked }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Delivery Settings</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email" className="text-sm">
-                        Email notifications
-                      </Label>
-                      <Switch
-                        id="email"
-                        checked={settings.emailNotifications}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, emailNotifications: checked }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="push" className="text-sm">
-                        Push notifications
-                      </Label>
-                      <Switch
-                        id="push"
-                        checked={settings.pushNotifications}
-                        onCheckedChange={(checked) =>
-                          setSettings(prev => ({ ...prev, pushNotifications: checked }))
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button className="w-full">
-                  Save Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };

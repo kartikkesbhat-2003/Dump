@@ -3,15 +3,6 @@ import { Eye, EyeOff, Mail, Lock, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { SignupData } from "@/types";
 import type { FormState } from "@/types";
 import { useDispatch } from "react-redux";
@@ -92,163 +83,164 @@ export const Signup = () => {
 
   const handleGoogleSignup = async () => {
     try {
-      console.log("Google signup clicked");
+      const backend = import.meta.env.VITE_API_BASE_URL || '';
+      // Redirect the browser to the backend Google OAuth start route
+      window.location.href = `${backend}/auth/google`;
     } catch (error) {
       console.error("Google signup error:", error);
     }
   };
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex items-center justify-center p-4 pt-20">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Create Account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to create your account
-          </CardDescription>
-        </CardHeader>
+    <div className="mx-auto w-full max-w-lg rounded-[36px] border border-white/10 bg-white/[0.04] p-6 lg:max-w-md lg:p-5 shadow-[0_25px_80px_rgba(0,0,0,0.65)] backdrop-blur-3xl">
+      <div className="space-y-2 text-center">
+        <p className="text-xs uppercase tracking-[0.5em] text-white/35">New here</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-2xl font-extralight text-white">Claim your dump handle.</h1>
+        <p className="text-sm text-white/60">
+          Spin up credentials once and unlock the entire stream.
+        </p>
+      </div>
 
-        <CardContent className="space-y-4">
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={handleGoogleSignup}
-            disabled={formState.isLoading}
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
+      <div className="mt-6 space-y-4 lg:space-y-3">
+        <Button
+          variant="secondary"
+          className="w-full rounded-full border border-white/20 bg-white/95 text-black transition hover:bg-white"
+          onClick={handleGoogleSignup}
+          disabled={formState.isLoading}
+        >
+          <Chrome className="mr-2 h-4 w-4" />
+          Continue with Google
+        </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
+        <div className="flex items-center gap-4 text-[0.65rem] uppercase tracking-[0.4em] text-white/40">
+          <span className="h-px flex-1 bg-white/15" />
+          <span>or email</span>
+          <span className="h-px flex-1 bg-white/15" />
+        </div>
+
+        <form onSubmit={handleOnSubmit} className="space-y-4 lg:space-y-3">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs uppercase tracking-[0.4em] text-white/50">
+              Email
+            </Label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@dump.social"
+                className="h-11 lg:h-10 rounded-2xl border-white/15 bg-white/5 pl-12 text-white placeholder:text-white/35 focus-visible:ring-white/40"
+                value={email}
+                onChange={handleOnChange}
+                disabled={formState.isLoading}
+              />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with email
-              </span>
-            </div>
+            {formState.errors.email && (
+              <p className="text-sm text-red-400">{formState.errors.email}</p>
+            )}
           </div>
 
-          <form onSubmit={handleOnSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="pl-9"
-                  value={email}
-                  onChange={handleOnChange}
-                  disabled={formState.isLoading}
-                />
-              </div>
-              {formState.errors.email && (
-                <p className="text-sm text-destructive">{formState.errors.email}</p>
-              )}
+          <div className="space-y-2">
+            <Label
+              htmlFor="password"
+              className="text-xs uppercase tracking-[0.4em] text-white/50"
+            >
+              Password
+            </Label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a passphrase"
+                className="h-11 lg:h-10 rounded-2xl border-white/15 bg-white/5 pl-12 pr-12 text-white placeholder:text-white/35 focus-visible:ring-white/40"
+                value={password}
+                onChange={handleOnChange}
+                disabled={formState.isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 text-white/60 hover:text-white"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
             </div>
+            {formState.errors.password && (
+              <p className="text-sm text-red-400">{formState.errors.password}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  className="pl-9 pr-9"
-                  value={password}
-                  onChange={handleOnChange}
-                  disabled={formState.isLoading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1 h-7 w-7 p-0"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              {formState.errors.password && (
-                <p className="text-sm text-destructive">{formState.errors.password}</p>
-              )}
+          <div className="space-y-2">
+            <Label
+              htmlFor="confirmPassword"
+              className="text-xs uppercase tracking-[0.4em] text-white/50"
+            >
+              Confirm Password
+            </Label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="One more time"
+                className="h-11 lg:h-10 rounded-2xl border-white/15 bg-white/5 pl-12 pr-12 text-white placeholder:text-white/35 focus-visible:ring-white/40"
+                value={confirmPassword}
+                onChange={handleOnChange}
+                disabled={formState.isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 text-white/60 hover:text-white"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  className="pl-9 pr-9"
-                  value={confirmPassword}
-                  onChange={handleOnChange}
-                  disabled={formState.isLoading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1 h-7 w-7 p-0"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              {formState.errors.confirmPassword && (
-                <p className="text-sm text-destructive">
-                  {formState.errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {formState.errors.general && (
-              <p className="text-sm text-destructive text-center">
-                {formState.errors.general}
+            {formState.errors.confirmPassword && (
+              <p className="text-sm text-red-400">
+                {formState.errors.confirmPassword}
               </p>
             )}
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={formState.isLoading}
-            >
-              {formState.isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
-        </CardContent>
+          {formState.errors.general && (
+            <p className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-center text-sm text-red-200">
+              {formState.errors.general}
+            </p>
+          )}
 
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          <Button
+            type="submit"
+            className="h-10 lg:h-11 w-full rounded-full bg-white text-black transition hover:bg-white/90"
+            disabled={formState.isLoading}
+          >
+            {formState.isLoading ? "Creating..." : "Create account"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="pt-6 text-center text-sm text-white/60">
+        Already streaming?{" "}
+        <Link to="/login" className="text-white hover:underline">
+          Sign in
+        </Link>
+      </div>
     </div>
   );
 };

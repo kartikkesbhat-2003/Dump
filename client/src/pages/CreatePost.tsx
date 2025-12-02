@@ -177,96 +177,91 @@ export const CreatePost: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Back Button at Top */}
-      <div className="mb-4">
-        <Button
-          variant="ghost"
-          onClick={handleCancel}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Feed
-        </Button>
+    <section className="relative isolate min-h-[100svh] overflow-hidden bg-gradient-to-b from-background via-background/95 to-black px-3 py-10 sm:px-6">
+      <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
+        <div
+          className="absolute left-1/2 top-[-25%] h-[42rem] w-[42rem] -translate-x-1/2 rounded-full blur-[260px]"
+          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)' }}
+        />
+        <div
+          className="absolute bottom-[-10%] right-[-15%] h-[28rem] w-[28rem] rounded-full blur-[200px]"
+          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.08), transparent 60%)' }}
+        />
       </div>
 
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create New Post</h1>
-        <p className="text-muted-foreground">Share your thoughts with the community</p>
-      </div>
+      <div className="relative z-10 mx-auto flex max-w-4xl flex-col gap-6 text-white">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={handleCancel}
+            className="rounded-full border border-white/10 bg-white/5 text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to feed
+          </Button>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/40">Compose</p>
+        </div>
 
-      {/* Main Form */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Field */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-base font-medium">Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={handleInputChange('title')}
-              placeholder="Enter a compelling title for your post..."
-              disabled={formState.isLoading}
-              className={`text-lg ${formState.errors.title ? 'border-destructive' : ''}`}
-            />
-            {formState.errors.title && (
-              <p className="text-sm text-destructive">{formState.errors.title}</p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              {formData.title.length}/200 characters
-            </p>
-          </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+          <p className="text-[10px] uppercase tracking-[0.45em] text-white/45">New transmission</p>
+          <h1 className="mt-2 text-2xl font-extralight">What's your dump today?</h1>
+          <p className="mt-2 text-sm text-white/65">Keep it raw, keep it brief, keep it in the stream.</p>
+        </div>
 
-          {/* Content Field */}
-          <div className="space-y-2">
-            <Label htmlFor="content" className="text-base font-medium">Content *</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={handleInputChange('content')}
-              placeholder="Share your thoughts, ideas, or experiences in detail..."
-              rows={8}
-              disabled={formState.isLoading}
-              className={`text-base ${formState.errors.content ? 'border-destructive' : ''}`}
-            />
-            {formState.errors.content && (
-              <p className="text-sm text-destructive">{formState.errors.content}</p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              {formData.content.length}/2000 characters
-            </p>
-          </div>
+        <div className="rounded-xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/0 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <Label htmlFor="title" className="text-[10px] uppercase tracking-[0.4em] text-white/40">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={handleInputChange('title')}
+                placeholder="Give this drop a headline"
+                disabled={formState.isLoading}
+                className={`h-12 rounded-xl border-white/20 bg-white/5 text-base text-white placeholder:text-white/40 focus-visible:ring-white/40 ${formState.errors.title ? 'border-red-400/60' : ''}`}
+              />
+              {formState.errors.title && (
+                <p className="text-sm text-red-300">{formState.errors.title}</p>
+              )}
+            </div>
 
-          {/* Image Upload */}
-          <div className="space-y-3">
-            <Label htmlFor="image" className="text-base font-medium">Image (Optional)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="content" className="text-[10px] uppercase tracking-[0.4em] text-white/40">
+                Body
+              </Label>
+              <Textarea
+                id="content"
+                value={formData.content}
+                onChange={handleInputChange('content')}
+                placeholder="Drop the thought exactly as it sits in your head."
+                rows={6}
+                disabled={formState.isLoading}
+                className={`rounded-2xl border-white/20 bg-white/5 p-4 text-sm text-white placeholder:text-white/40 focus-visible:ring-white/40 ${formState.errors.content ? 'border-red-400/60' : ''}`}
+              />
+              {formState.errors.content && (
+                <p className="text-sm text-red-300">{formState.errors.content}</p>
+              )}
+            </div>
+
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] uppercase tracking-[0.4em] text-white/40">
+                  Image (optional)
+                </Label>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={formState.isLoading}
-                  className="flex items-center gap-2"
+                  className="rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
                 >
-                  <Image className="h-4 w-4" />
-                  {selectedImage ? 'Change Image' : 'Add Image'}
+                  <Image className="mr-2 h-4 w-4" />
+                  {selectedImage ? 'Change' : 'Attach'}
                 </Button>
-                {selectedImage && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeImage}
-                    disabled={formState.isLoading}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    Remove Image
-                  </Button>
-                )}
               </div>
-              
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -275,93 +270,80 @@ export const CreatePost: React.FC = () => {
                 className="hidden"
                 disabled={formState.isLoading}
               />
-              
+
               {imagePreview && (
-                <div className="relative">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full max-w-md h-64 object-cover rounded-lg border border-border"
-                  />
+                <div className="overflow-hidden rounded-2xl border border-white/10">
+                  <img src={imagePreview} alt="Preview" className="h-40 w-full object-cover" />
                 </div>
               )}
-              
+
+              {selectedImage && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeImage}
+                  disabled={formState.isLoading}
+                  className="text-sm text-white/70 underline-offset-4 hover:text-white"
+                >
+                  Remove attachment
+                </Button>
+              )}
+
               {formState.errors.image && (
-                <p className="text-sm text-destructive">{formState.errors.image}</p>
+                <p className="text-sm text-red-300">{formState.errors.image}</p>
               )}
-              
-              <p className="text-sm text-muted-foreground">
-                Supported formats: JPG, PNG, GIF. Maximum file size: 5MB
-              </p>
             </div>
-          </div>
 
-          {/* Anonymous Option */}
-          <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-            <input
-              type="checkbox"
-              id="isAnonymous"
-              checked={formData.isAnonymous}
-              onChange={handleInputChange('isAnonymous')}
-              disabled={formState.isLoading}
-              className="rounded h-4 w-4"
-            />
-            <div className="flex-1">
-              <Label htmlFor="isAnonymous" className="text-base font-medium cursor-pointer">
-                Post anonymously
-              </Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your post will be published without showing your username
-              </p>
+            <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="isAnonymous"
+                  checked={formData.isAnonymous}
+                  onChange={handleInputChange('isAnonymous')}
+                  disabled={formState.isLoading}
+                  className="h-4 w-4 rounded border-white/30 bg-transparent text-white"
+                />
+                <span className="text-white">Post anonymously</span>
+              </label>
+              <p className="text-xs uppercase tracking-[0.4em] text-white/40">identity hidden</p>
             </div>
-          </div>
 
-          {/* General Error */}
-          {formState.errors.general && (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm text-destructive">{formState.errors.general}</p>
+            {formState.errors.general && (
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {formState.errors.general}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCancel}
+                disabled={formState.isLoading}
+                className="rounded-full border border-white/20 bg-transparent px-6 py-2 text-sm text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={formState.isLoading || !formData.title.trim() || !formData.content.trim()}
+                className="rounded-full bg-white px-6 py-2 text-sm text-black hover:bg-white/90"
+              >
+                {formState.isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Publishing
+                  </>
+                ) : (
+                  'Drop it'
+                )}
+              </Button>
             </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={formState.isLoading}
-              className="px-8"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={formState.isLoading || !formData.title.trim() || !formData.content.trim()}
-              className="px-8 min-w-32"
-            >
-              {formState.isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Post...
-                </>
-              ) : (
-                'Create Post'
-              )}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-
-      {/* Help Text */}
-      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-        <h3 className="font-medium mb-2">Tips for a great post:</h3>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Write a clear, engaging title that summarizes your post</li>
-          <li>• Provide detailed content that adds value to the discussion</li>
-          <li>• Use images to enhance your message when relevant</li>
-          <li>• Be respectful and follow community guidelines</li>
-        </ul>
-      </div>
-    </div>
+    </section>
   );
 };

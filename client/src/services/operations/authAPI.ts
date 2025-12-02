@@ -20,9 +20,6 @@ export function sendOtp(email: string, navigate: any) {
         checkUserPresent: true,
       })
       dispatch(setProgress(100));
-      console.log("SENDOTP API RESPONSE............", response)
-
-      console.log(response.data.success)
 
       if (!response.data.success) {
         throw new Error(response.data.message)
@@ -31,7 +28,7 @@ export function sendOtp(email: string, navigate: any) {
       toast.success("OTP Sent Successfully")
       navigate("/verify-email")
     } catch (error) {
-      console.log("SENDOTP API ERROR............", error)
+      console.error("SENDOTP API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to send OTP"
       )
@@ -59,8 +56,7 @@ export function signUp(
         otp,
       })
 
-      console.log("SIGNUP API RESPONSE............", response)
-
+      // Signup API response handled
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -69,7 +65,7 @@ export function signUp(
       navigate("/login")
     } catch (error) {
       dispatch(setProgress(100));
-      console.log("SIGNUP API ERROR............", error)
+      console.error("SIGNUP API ERROR:", error)
       toast.error("Signup Failed")
       navigate("/signup")
     }
@@ -88,8 +84,7 @@ export function login(email: string, password: string, navigate: any) {
         password,
       })
 
-      console.log("LOGIN API RESPONSE............", response)
-
+      // Login API response handled
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -101,7 +96,7 @@ export function login(email: string, password: string, navigate: any) {
       navigate("/")
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("LOGIN API ERROR............", error)
+      console.error("LOGIN API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Login Failed"
       )

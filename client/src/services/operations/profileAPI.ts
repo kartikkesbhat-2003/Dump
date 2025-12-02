@@ -15,10 +15,8 @@ export function getCurrentUser() {
     dispatch(setProgress(10))
     try {
       const response = await apiConnector("GET", GET_CURRENT_USER, undefined)
-      
-      dispatch(setProgress(50))
-      console.log("GET CURRENT USER API RESPONSE............", response)
 
+      dispatch(setProgress(50))
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -29,7 +27,7 @@ export function getCurrentUser() {
       
       return response.data.user
     } catch (error) {
-      console.log("GET CURRENT USER API ERROR............", error)
+      console.error("GET CURRENT USER API ERROR:", error)
       dispatch(setProgress(100))
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to fetch user profile"
@@ -62,7 +60,7 @@ export function getUserStats() {
       dispatch(setProgress(100))
       return stats
     } catch (error) {
-      console.log("GET USER STATS ERROR............", error)
+      console.error("GET USER STATS ERROR:", error)
       dispatch(setProgress(100))
       toast.error("Failed to fetch user statistics")
       return {

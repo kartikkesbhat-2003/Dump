@@ -7,6 +7,7 @@ const {
     updatePost,
     deletePost,
     getUserPosts,
+    getPostsByUserId,
     votePost
 } = require("../controllers/posts");
 const { auth, optionalAuth } = require("../middleware/auth");
@@ -20,6 +21,7 @@ router.post("/", auth, createPost);              // POST /posts - Create new pos
 router.put("/:id", auth, updatePost);            // PUT /posts/:id - Update post
 router.delete("/:id", auth, deletePost);         // DELETE /posts/:id - Delete post
 router.get("/user/me", auth, getUserPosts);      // GET /posts/user/me - Get current user's posts
+router.get('/user/:userId', optionalAuth, getPostsByUserId); // GET /post/user/:userId - Public posts for a user (hides anonymous posts for others)
 router.post("/:id/vote", auth, votePost);        // POST /posts/:id/vote - Vote on post
 
 module.exports = router;

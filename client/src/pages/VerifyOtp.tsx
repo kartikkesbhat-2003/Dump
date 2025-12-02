@@ -2,13 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signUp, sendOtp } from "@/services/operations/authAPI";
@@ -23,7 +16,7 @@ interface FormState {
 export const VerifyOtp = () => {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
-  
+
   // Get signup data from Redux store
   const { signupData } = useSelector((state: any) => state.auth);
 
@@ -63,7 +56,7 @@ export const VerifyOtp = () => {
   const handleOtpChange = (index: number, value: string) => {
     // Only allow single digit
     if (value.length > 1) return;
-    
+
     // Only allow numbers
     if (value && !/^\d$/.test(value)) return;
 
@@ -90,7 +83,7 @@ export const VerifyOtp = () => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    
+
     // Handle arrow keys
     if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -103,20 +96,20 @@ export const VerifyOtp = () => {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text");
-    
+
     // Only process if it's exactly 4 digits
     if (!/^\d{4}$/.test(pastedData)) return;
-    
+
     const digits = pastedData.split("");
     setOtp(digits);
-    
+
     // Focus the last input
     inputRefs.current[3]?.focus();
   };
 
   const validateOtp = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     const otpString = otp.join("");
     if (otpString.length !== 4) {
       errors.otp = "Please enter the complete 4-digit OTP";
@@ -143,7 +136,7 @@ export const VerifyOtp = () => {
 
     try {
       const otpString = otp.join("");
-      
+
       // Call signup API with OTP
       dispatch(signUp(
         signupData.email,
@@ -198,92 +191,82 @@ export const VerifyOtp = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex items-center justify-center p-4 pt-20">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleGoBack}
-              className="p-1 h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <CardTitle className="text-2xl font-bold">
-              Verify OTP
-            </CardTitle>
+    <div className="mx-auto w-full max-w-lg rounded-[36px] border border-white/10 bg-white/[0.04] p-8 shadow-[0_25px_80px_rgba(0,0,0,0.65)] backdrop-blur-3xl">
+      <div className="flex items-center gap-4 text-white">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
+          onClick={handleGoBack}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <p className="text-xs uppercase tracking-[0.5em] text-white/35">Verification</p>
+          <h1 className="text-2xl font-extralight text-white">Confirm your entry.</h1>
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm text-white/60 text-center">
+        We pushed a 4-digit pulse to <span className="text-white">{signupData.email}</span>
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <div className="space-y-3">
+          <div className="flex justify-center gap-4">
+            {otp.map((digit, index) => (
+              <Input
+                key={index}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                onPaste={index === 0 ? handlePaste : undefined}
+                disabled={formState.isLoading}
+                className="h-14 w-14 rounded-2xl border-white/15 bg-white/5 text-center text-xl font-semibold text-white tracking-[0.3em] focus-visible:ring-white/40"
+              />
+            ))}
           </div>
-          <CardDescription className="text-center">
-            We've sent a 4-digit verification code to {signupData.email}
-          </CardDescription>
-        </CardHeader>
+          {formState.errors.otp && (
+            <p className="text-sm text-center text-red-300">{formState.errors.otp}</p>
+          )}
+        </div>
 
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* OTP Input Fields */}
-            <div className="space-y-2">
-              <div className="flex justify-center gap-3">
-                {otp.map((digit, index) => (
-                  <Input
-                    key={index}
-                    ref={(el) => { inputRefs.current[index] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    onPaste={index === 0 ? handlePaste : undefined}
-                    disabled={formState.isLoading}
-                    className="w-12 h-12 text-center text-lg font-semibold"
-                  />
-                ))}
-              </div>
-              {formState.errors.otp && (
-                <p className="text-sm text-destructive text-center">
-                  {formState.errors.otp}
-                </p>
-              )}
-            </div>
+        {formState.errors.general && (
+          <p className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-center text-sm text-red-200">
+            {formState.errors.general}
+          </p>
+        )}
 
-            {/* General Error */}
-            {formState.errors.general && (
-              <p className="text-sm text-destructive text-center">
-                {formState.errors.general}
-              </p>
-            )}
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-full bg-white text-black transition hover:bg-white/90"
+          disabled={formState.isLoading}
+        >
+          {formState.isLoading ? "Verifying..." : "Unlock the feed"}
+        </Button>
+      </form>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={formState.isLoading}
-            >
-              {formState.isLoading ? "Verifying..." : "Verify OTP"}
-            </Button>
-          </form>
-
-          {/* Resend OTP */}
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Didn't receive the code?
-            </p>
-            <Button
-              variant="link"
-              onClick={handleResendOtp}
-              disabled={formState.countdown > 0 || formState.isResending}
-              className="text-sm font-medium"
-            >
-              {formState.isResending
-                ? "Sending..."
-                : formState.countdown > 0
-                ? `Resend in ${formState.countdown}s`
-                : "Resend OTP"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mt-8 space-y-2 text-center">
+        <p className="text-sm text-white/60">No ping yet?</p>
+        <Button
+          variant="ghost"
+          className="text-sm text-white underline-offset-4 hover:text-white/80"
+          onClick={handleResendOtp}
+          disabled={formState.countdown > 0 || formState.isResending}
+        >
+          {formState.isResending
+            ? "Sending..."
+            : formState.countdown > 0
+              ? `Resend in ${formState.countdown}s`
+              : "Resend OTP"}
+        </Button>
+      </div>
     </div>
   );
 };

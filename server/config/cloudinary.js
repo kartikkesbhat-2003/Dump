@@ -7,10 +7,8 @@ exports.cloudnairyconnect= ()=>{
             api_key : process.env.API_KEY,
             api_secret : process.env.API_SECRET
         })
-        console.log("CD connected");
-
-        
+        console.info("Cloudinary configured");
     } catch (error) {
-        console.log("error connecting CD"+error)
+        console.error("Error configuring Cloudinary:", error);
     }
 }

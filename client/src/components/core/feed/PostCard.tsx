@@ -158,6 +158,13 @@ export const PostCard: React.FC<PostCardProps> = ({
     navigate(`/post/${post._id}`);
   };
 
+  const handleUserClick = (e: React.MouseEvent) => {
+    // Prevent navigating to post and stop propagation
+    e.stopPropagation();
+    if (post.isAnonymous || !post.user?._id) return;
+    navigate(`/user/${post.user._id}`);
+  };
+
   const handleCommentClick = (e: React.MouseEvent) => {
     // Stop event propagation to prevent post navigation
     e.stopPropagation();
@@ -171,47 +178,75 @@ export const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-sm transition-shadow">
-      {/* Header */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
+    <article className="group relative pl-10 sm:pl-14">
+      <span
+        className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute left-[11px] top-6 h-2 w-2 rounded-full bg-white/70 shadow-[0_0_25px_rgba(255,255,255,0.45)] transition duration-500 group-hover:scale-125"
+        aria-hidden
+      />
+
+      <div className="relative ml-2 rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-              {post.isAnonymous ? (
-                <User className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <span className="text-sm font-medium">{getInitials()}</span>
-              )}
+            <div
+              onClick={handleUserClick}
+              role={post.isAnonymous ? undefined : 'button'}
+              tabIndex={post.isAnonymous ? -1 : 0}
+              onKeyDown={(e) => {
+                if (!post.isAnonymous && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  navigate(`/user/${post.user._id}`);
+                }
+              }}
+              className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/4 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
+            >
+              {post.isAnonymous ? <User className="h-4 w-4" /> : getInitials()}
+              <span className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full border border-white/10 opacity-30" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-medium text-sm">
+            <div>
+              <p
+                className={`text-sm font-medium leading-tight ${post.isAnonymous ? 'text-white/90' : 'text-white/90 cursor-pointer hover:underline'}`}
+                onClick={(e) => {
+                  handleUserClick(e as any);
+                }}
+                role={post.isAnonymous ? undefined : 'link'}
+                tabIndex={post.isAnonymous ? -1 : 0}
+                onKeyDown={(e) => {
+                  if (!post.isAnonymous && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    navigate(`/user/${post.user._id}`);
+                  }
+                }}
+              >
                 {getDisplayName()}
                 {post.isAnonymous && (
-                  <span className="ml-2 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                  <span className="ml-2 rounded-full border border-white/10 px-2 py-0.5 text-[0.55rem] uppercase tracking-[0.25em] text-white/60">
                     Anonymous
                   </span>
                 )}
-              </span>
-              <span className="text-muted-foreground text-xs">
+              </p>
+              <p className="text-xs text-white/40">
                 {formatTimeAgo(post.createdAt)}
-              </span>
+              </p>
             </div>
           </div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full border border-white/10 text-white/60 hover:border-white/40 hover:text-white"
             onClick={handleActionClick}
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Content */}
-        <div className="mb-4">
-          <h3 
-            className="font-semibold text-base mb-2 leading-tight cursor-pointer hover:text-primary focus:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 rounded transition-colors group"
+        <div className="mt-4 space-y-3">
+          <h3
+            className="text-xl font-light leading-tight text-white hover:text-white/90"
             onClick={handlePostClick}
             role="button"
             tabIndex={0}
@@ -221,104 +256,103 @@ export const PostCard: React.FC<PostCardProps> = ({
                 handlePostClick();
               }
             }}
-            title="Click to view full post"
           >
-            <span className="group-hover:underline">{post.title}</span>
+            {post.title}
           </h3>
-          <p className="text-sm text-foreground leading-relaxed mb-3">
-            {post.content}
-          </p>
-          
-          {/* Image */}
+          <p className="text-sm leading-relaxed text-white/70">{post.content}</p>
+
           {post.imageUrl && (
-            <div className="mt-3 rounded-lg overflow-hidden border border-border">
+            <div className="overflow-hidden rounded-2xl border border-white/8">
               <img
                 src={post.imageUrl}
-                alt="Post image"
-                className="w-full h-auto max-h-96 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                alt="Post visual"
+                className="h-auto w-full max-h-[18rem] cursor-pointer object-cover transition hover:opacity-90"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Open image in new tab for better viewing
                   window.open(post.imageUrl, '_blank');
                 }}
                 onError={(e) => {
-                  // Hide image if it fails to load
                   e.currentTarget.style.display = 'none';
                 }}
-                title="Click to view full image"
               />
             </div>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-border">
-          {/* Voting */}
-          <div className="flex items-center gap-1">
+        <div className="mt-4 flex items-center gap-4 text-xs text-white/50">
+          <span className="flex items-center gap-2">
+            <span className="h-1 w-5 rounded-full bg-white/20" />
+            {post.totalVotes} pulse
+          </span>
+          <span>{post.commentsCount} replies</span>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               disabled={!token || isVoting}
-              className={`h-8 px-2 ${
+              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] text-white/70 transition ${
                 userVote === 'upvote'
-                  ? 'text-green-600 bg-green-50 hover:bg-green-100' 
-                  : 'text-muted-foreground hover:text-green-600'
-              } ${!token ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  ? 'bg-white text-black shadow-[0_15px_35px_rgba(255,255,255,0.15)]'
+                  : 'hover:border-white/40 hover:text-white'
+              } ${!token ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={(e) => {
                 handleActionClick(e);
                 handleUpvote();
               }}
             >
-              <ArrowUp className={`h-4 w-4 mr-1 ${userVote === 'upvote' ? 'fill-green-600' : ''}`} />
-              <span className="text-xs">{localUpvotes}</span>
+              <ArrowUp className="mr-2 h-4 w-4" />
+              {localUpvotes}
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
               disabled={!token || isVoting}
-              className={`h-8 px-2 ${
+              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] text-white/70 transition ${
                 userVote === 'downvote'
-                  ? 'text-red-600 bg-red-50 hover:bg-red-100' 
-                  : 'text-muted-foreground hover:text-red-600'
-              } ${!token ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  ? 'bg-white text-black shadow-[0_15px_35px_rgba(255,255,255,0.15)]'
+                  : 'hover:border-white/40 hover:text-white'
+              } ${!token ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={(e) => {
                 handleActionClick(e);
                 handleDownvote();
               }}
             >
-              <ArrowDown className={`h-4 w-4 mr-1 ${userVote === 'downvote' ? 'fill-red-600' : ''}`} />
-              <span className="text-xs">{localDownvotes}</span>
+              <ArrowDown className="mr-2 h-4 w-4" />
+              {/* downvote count intentionally hidden per UX */}
             </Button>
           </div>
 
-          {/* Comments, View Post, and Share */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 px-2 ${showComments ? 'text-blue-600 bg-blue-50' : 'text-muted-foreground hover:text-blue-600'}`}
+              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition ${
+                showComments ? 'bg-white text-black' : 'text-white/70 hover:text-white'
+              }`}
               onClick={handleCommentClick}
             >
-              <MessageCircle className="h-4 w-4 mr-1" />
-              <span className="text-xs">{post.commentsCount}</span>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {post.commentsCount}
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+              className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white"
               onClick={handlePostClick}
-              title="View full post"
             >
-              <ExternalLink className="h-4 w-4 mr-1" />
-              <span className="text-xs">View</span>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-foreground"
+              className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white"
               onClick={(e) => {
                 handleActionClick(e);
                 onShare?.(post._id);
@@ -328,14 +362,19 @@ export const PostCard: React.FC<PostCardProps> = ({
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Comment Section */}
-      <CommentSection
-        postId={post._id}
-        isVisible={showComments}
-        onClose={onCloseComments || (() => {})}
-      />
-    </div>
+        <div
+          className={`mt-6 overflow-hidden rounded-3xl transition-all duration-500 ${
+            showComments ? 'max-h-[4000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+          }`}
+        >
+          <CommentSection
+            postId={post._id}
+            isVisible={showComments}
+            onClose={onCloseComments || (() => {})}
+          />
+        </div>
+      </div>
+    </article>
   );
 };

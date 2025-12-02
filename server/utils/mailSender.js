@@ -1,59 +1,47 @@
-const nodemailer = require("nodemailer");
-require('dotenv').config()
-
+const emailjs = require('@emailjs/nodejs');
+require('dotenv').config();
 
 const mailSender = async (email, title, body) => {
-    try{
-            // Defensive trimming of env values (some .env files include spaces around =)
-            const MAIL_HOST = process.env.MAIL_HOST ? process.env.MAIL_HOST.trim() : undefined;
-            const MAIL_USER = process.env.MAIL_USER ? process.env.MAIL_USER.trim() : undefined;
-            const MAIL_PASS = process.env.MAIL_PASS ? process.env.MAIL_PASS.trim() : undefined;
-            const MAIL_PORT = process.env.MAIL_PORT ? Number(process.env.MAIL_PORT.trim()) : 587;
-            const MAIL_SECURE = process.env.MAIL_SECURE === 'true' || MAIL_PORT === 465;
+    try {
+        const SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
+        const TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
+        const PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
+        const PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 
-            // Log non-sensitive connection info to help debugging (don't log the password)
-            console.log("[mailSender] transport config:", { host: MAIL_HOST, port: MAIL_PORT, secure: MAIL_SECURE, user: MAIL_USER ? (MAIL_USER.slice(0,3) + '...') : undefined });
+        // Preparing to send email (sensitive details are not logged)
 
-            let transporter = nodemailer.createTransport({
-                host: MAIL_HOST,
-                port: MAIL_PORT,
-                secure: MAIL_SECURE,
-                auth: MAIL_USER && MAIL_PASS ? {
-                    user: MAIL_USER,
-                    pass: MAIL_PASS,
-                } : undefined,
-            })
+        if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY || !PRIVATE_KEY) {
+            throw new Error("Missing EmailJS environment variables (EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY)");
+        }
 
-            // Verify connection configuration — this will attempt to connect to the SMTP server and fail fast with helpful errors
-            try {
-                await transporter.verify();
-                console.log('[mailSender] transporter verified: connection configuration looks good');
-            } catch (verifyErr) {
-                console.log('[mailSender] transporter verification failed:', verifyErr && verifyErr.message ? verifyErr.message : verifyErr);
-                // continue — sendMail will also surface errors, but verification failure is often the root cause
+        if (process.env.MAIL_DRY_RUN === 'true') {
+            return { ok: true, dryRun: true };
+        }
+
+        const templateParams = {
+            to_email: email,
+            subject: title,
+            message: body,
+        };
+
+        // Template parameters prepared (not logged for privacy)
+
+        const response = await emailjs.send(
+            SERVICE_ID,
+            TEMPLATE_ID,
+            templateParams,
+            {
+                publicKey: PUBLIC_KEY,
+                privateKey: PRIVATE_KEY,
             }
+        );
 
-
-            // Support a DRY_RUN mode to avoid sending real emails during local testing
-            if (process.env.MAIL_DRY_RUN === 'true') {
-                console.log('[mailSender] DRY_RUN enabled — skipping actual send');
-                return { ok: true, dryRun: true };
-            }
-
-            let info = await transporter.sendMail({
-                from: `"${process.env.APP_NAME || 'Dump'}" <${MAIL_USER || process.env.MAIL_USER}>`,
-                to: `${email}`,
-                subject: `${title}`,
-                html: `${body}`,
-            })
-            console.log(info);
-            return info;
+        // Email sent successfully
+        return response;
+    } catch (error) {
+        console.error('[mailSender] ❌ Failed to send email:', error?.message || error);
+        throw error; // Re-throw to let caller handle it
     }
-    catch(error) {
-        console.log(error.message);
-        return error;
-    }
-}
-
+};
 
 module.exports = mailSender;

@@ -11,6 +11,7 @@ const {
   DELETE_POST,
   UPDATE_POST,
   GET_POSTS_BY_USER,
+  GET_POSTS_BY_USER_ID,
   VOTE_POST,
 } = postEndpoints
 
@@ -44,8 +45,6 @@ export function createPost(
         }
       )
 
-      console.log("CREATE POST API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -55,7 +54,7 @@ export function createPost(
       return response.data.post
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("CREATE POST API ERROR............", error)
+      console.error("CREATE POST API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to create post"
       )
@@ -110,8 +109,6 @@ export function getAllPosts(
         config.headers
       );
 
-      console.log("GET ALL POSTS API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -120,7 +117,7 @@ export function getAllPosts(
       return response.data
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("GET ALL POSTS API ERROR............", error)
+      console.error("GET ALL POSTS API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to fetch posts"
       )
@@ -138,8 +135,6 @@ export function getPostById(postId: string) {
     try {
       const response = await apiConnector("GET", GET_POST_BY_ID(postId))
 
-      console.log("GET POST BY ID API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -148,7 +143,7 @@ export function getPostById(postId: string) {
       return response.data.post
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("GET POST BY ID API ERROR............", error)
+      console.error("GET POST BY ID API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to fetch post"
       )
@@ -183,8 +178,6 @@ export function updatePost(
         updateData
       )
 
-      console.log("UPDATE POST API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -194,7 +187,7 @@ export function updatePost(
       return response.data.post
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("UPDATE POST API ERROR............", error)
+      console.error("UPDATE POST API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to update post"
       )
@@ -274,6 +267,38 @@ export function getUserPosts(
   }
 }
 
+// Get posts by arbitrary user id (public view)
+export function getPostsByUserId(userId: string) {
+  return async (dispatch: any) => {
+    dispatch(setLoading(true))
+    try {
+      const response = await apiConnector(
+        "GET",
+        GET_POSTS_BY_USER_ID(userId),
+        undefined,
+      )
+
+      console.log("GET POSTS BY USER ID API RESPONSE............", response)
+
+      if (!response.data.success) {
+        throw new Error(response.data.message)
+      }
+
+      dispatch(setProgress(100))
+      return response.data
+    } catch (error) {
+      dispatch(setProgress(100))
+      console.log("GET POSTS BY USER ID API ERROR............", error)
+      toast.error(
+        (error as any)?.response?.data?.message || (error as Error).message || "Failed to fetch user posts"
+      )
+      throw error
+    } finally {
+      dispatch(setLoading(false))
+    }
+  }
+}
+
 // Vote on a post
 export function votePost(
   postId: string,
@@ -289,8 +314,6 @@ export function votePost(
         }
       )
 
-      console.log("VOTE POST API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -298,7 +321,7 @@ export function votePost(
       // Don't show toast for voting actions as they should be quick and silent
       return response.data
     } catch (error) {
-      console.log("VOTE POST API ERROR............", error)
+      console.error("VOTE POST API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to vote on post"
       )
@@ -328,8 +351,6 @@ export function getTrendingPosts(
         }
       )
 
-      console.log("GET TRENDING POSTS API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -338,7 +359,7 @@ export function getTrendingPosts(
       return response.data
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("GET TRENDING POSTS API ERROR............", error)
+      console.error("GET TRENDING POSTS API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to fetch trending posts"
       )
@@ -372,8 +393,6 @@ export function searchPosts(
         }
       )
 
-      console.log("SEARCH POSTS API RESPONSE............", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
@@ -382,7 +401,7 @@ export function searchPosts(
       return response.data
     } catch (error) {
       dispatch(setProgress(100))
-      console.log("SEARCH POSTS API ERROR............", error)
+      console.error("SEARCH POSTS API ERROR:", error)
       toast.error(
         (error as any)?.response?.data?.message || (error as Error).message || "Failed to search posts"
       )

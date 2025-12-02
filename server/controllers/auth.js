@@ -7,47 +7,47 @@ require("dotenv").config();
 // send otp controller
 
 exports.sendotp = async (req, res) => {
-	try {
-		const { email } = req.body;
+    try {
+        const { email } = req.body;
 
-        if(!email) {
+        if (!email) {
             return res.status(400).json({
                 success: false,
                 message: "Email is required"
             })
         }
 
-		// Check if user is already present
-		const checkUserPresent = await User.findOne({ email });
+        // Check if user is already present
+        const checkUserPresent = await User.findOne({ email });
 
-		// If user found with provided email
-		if (checkUserPresent) {
-			// Return 401 Unauthorized status code with error message
-			return res.status(401).json({
-				success: false,
-				message: `User is Already Registered`,
-			});
-		}
+        // If user found with provided email
+        if (checkUserPresent) {
+            // Return 401 Unauthorized status code with error message
+            return res.status(401).json({
+                success: false,
+                message: `User is Already Registered`,
+            });
+        }
 
-		var otp = Math.floor(1000 + Math.random() * 9000); // Generate 4 digit OTP
-		const otpPayload = { email, otp };
-		const otpBody = await OTP.create(otpPayload);
+        var otp = Math.floor(1000 + Math.random() * 9000); // Generate 4 digit OTP
+        const otpPayload = { email, otp };
+        const otpBody = await OTP.create(otpPayload);
 
-		res.status(200).json({
-			success: true,
-			message: `OTP Sent Successfully`,
-			otp,
-		});
-	} catch (error) {
-		console.log(error.message);
-		return res.status(500).json(
-            { 
-                success: false, 
+        res.status(200).json({
+            success: true,
+            message: `OTP Sent Successfully`,
+            otp,
+        });
+    } catch (error) {
+        console.error(error.message || error);
+        return res.status(500).json(
+            {
+                success: false,
                 error: error.message,
                 message: "Error in sending OTP"
             }
         );
-	}
+    }
 };
 
 // Signup Controller for Registering Users
@@ -56,7 +56,7 @@ exports.signup = async (req, res) => {
     try {
         const { email, password, confirmPassword, otp } = req.body;
 
-        if(!email || !password || !confirmPassword || !otp) {
+        if (!email || !password || !confirmPassword || !otp) {
             return res.status(400).json({
                 success: false,
                 message: "Email, Password, Confirm Password and OTP are required"
@@ -72,19 +72,19 @@ exports.signup = async (req, res) => {
 
         // Verify OTP
         const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-		if (response.length === 0) {
-			// OTP not found for the email
-			return res.status(400).json({
-				success: false,
-				message: "The OTP is not valid",
-			});
-		} else if (otp !== response[0].otp) {
-			// Invalid OTP
-			return res.status(400).json({
-				success: false,
-				message: "The OTP is not valid",
-			});
-		}
+        if (response.length === 0) {
+            // OTP not found for the email
+            return res.status(400).json({
+                success: false,
+                message: "The OTP is not valid",
+            });
+        } else if (otp !== response[0].otp) {
+            // Invalid OTP
+            return res.status(400).json({
+                success: false,
+                message: "The OTP is not valid",
+            });
+        }
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -115,7 +115,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if(!email || !password) {
+        if (!email || !password) {
             return res.status(400).json({
                 success: false,
                 message: "Email and Password are required"
@@ -148,18 +148,18 @@ exports.login = async (req, res) => {
         );
 
         user.token = token;
-		user.password = undefined;
+        user.password = undefined;
 
         const options = {
-				expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
-				httpOnly: true,
-			};
-			res.cookie("token", token, options).status(200).json({
-				success: true,
-				token,
-				user,
-				message: `User Login Success`,
-			});
+            expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+            httpOnly: true,
+        };
+        res.cookie("token", token, options).status(200).json({
+            success: true,
+            token,
+            user,
+            message: `User Login Success`,
+        });
     } catch (error) {
         console.error("Error logging in user:", error);
         res.status(500).json({
@@ -174,38 +174,50 @@ exports.login = async (req, res) => {
 // Google OAuth Controller - handles user creation/login via Google
 exports.googleOAuthHandler = async (profile) => {
     try {
+        // Google OAuth handler invoked; sensitive profile data is not logged
+
         const { id: googleId, emails } = profile;
+
+        if (!emails || !emails[0] || !emails[0].value) {
+            console.error('❌ No email found in Google profile');
+            throw new Error('No email found in Google profile');
+        }
+
         const email = emails[0].value;
 
         // Check if user already exists with this Google ID
         let user = await User.findOne({ googleId });
-        
+
         if (user) {
-            // User exists, return the user
             return user;
         }
 
         // Check if user exists with this email (regular signup)
         user = await User.findOne({ email });
-        
+
         if (user) {
-            // User exists with email, link Google account
+            // User exists with email, link Google account without logging sensitive info
             user.googleId = googleId;
             await user.save();
             return user;
         }
 
+        // Creating new user with Google account
+
         // Create new user with Google account
+        // Hash a placeholder password for Google users
+        const hashedPassword = await bcrypt.hash('google_oauth_' + googleId, 10);
+
         user = new User({
             email,
             googleId,
-            password: "google_oauth", // Placeholder password for Google users
+            password: hashedPassword, // Hashed placeholder password
         });
 
         await user.save();
         return user;
     } catch (error) {
-        console.error("Error in Google OAuth handler:", error);
+        console.error("❌ Error in Google OAuth handler:", error);
         throw error;
     }
 };

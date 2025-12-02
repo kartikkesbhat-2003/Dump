@@ -2,8 +2,7 @@ import React from 'react';
 import { Plus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface CreatePostButtonProps {
   onCreatePost?: () => void;
@@ -20,17 +19,16 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
     }
   };
 
-  // Mobile View (Small) - Floating Action Button
   const MobileFAB = () => {
     if (!token) {
-      return null; // Hidden for guests
+      return null;
     }
 
     return (
-      <div className="fixed bottom-6 right-6 z-50 lg:hidden">
+      <div className="fixed bottom-6 right-6 z-40 lg:hidden">
         <Button
           size="lg"
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90"
+          className="h-14 w-14 rounded-full border border-white/10 bg-white/90 text-black shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition hover:bg-white"
           onClick={handleClick}
         >
           <Plus className="h-6 w-6" />
@@ -39,25 +37,25 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
     );
   };
 
-  // Desktop View (Large) - Full-width Input Card
-  const DesktopInputCard = () => {
+  const InputCard = ({ compact = false }: { compact?: boolean }) => {
     if (!token) {
       return (
-        <div className="bg-card border border-border rounded-lg p-6 text-center">
-          <h3 className="text-lg font-semibold mb-2">Join the debate</h3>
-          <p className="text-muted-foreground mb-4">
-            Sign up or log in to share your thoughts with the community
+        <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 px-6 py-6 text-center text-white">
+          <div className="text-xs uppercase tracking-[0.5em] text-white/40">Dump locked</div>
+          <h3 className="mt-3 text-2xl font-extralight">Only members can drop today.</h3>
+          <p className="mt-2 text-sm text-white/60">
+            Step in, claim your voice, and add your dump to the collective stream.
           </p>
-          <div className="flex gap-3 justify-center">
-            <Link 
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-[0.4em]">
+            <Link
               to="/signup"
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+              className="rounded-full border border-white/10 px-6 py-2 text-white/80 transition hover:border-white/40 hover:text-white"
             >
-              Sign Up
+              Join
             </Link>
-            <Link 
+            <Link
               to="/login"
-              className="border border-border px-6 py-2 rounded-lg hover:bg-accent transition-colors"
+              className="rounded-full border border-white/10 px-6 py-2 text-white/60 transition hover:border-white/40 hover:text-white"
             >
               Log In
             </Link>
@@ -67,37 +65,50 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
     }
 
     return (
-      <div className="bg-card border border-border rounded-lg p-4">
-        <div className="flex gap-3">
-          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-            <User className="h-5 w-5 text-muted-foreground" />
+      <div className={`relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 px-6 py-6 text-white ${compact ? 'space-y-4' : ''}`}>
+        <div className="flex items-center gap-4">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xs uppercase tracking-[0.3em] text-white/60">
+            <User className="h-4 w-4" />
+            <span className="absolute -right-2 -top-2 h-6 w-6 rounded-full border border-white/10 opacity-30" />
           </div>
           <div className="flex-1">
-            <div 
-              className="bg-muted rounded-lg p-3 cursor-pointer hover:bg-muted/80 transition-colors"
+            <p className="text-xs uppercase tracking-[0.5em] text-white/40">Dump Console</p>
+            <button
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-left text-sm text-white/70 transition hover:border-white/40 hover:text-white"
               onClick={handleClick}
             >
-              <p className="text-muted-foreground">What's your dump today?</p>
-            </div>
+              What's your dump today?
+            </button>
           </div>
+          {!compact && (
+            <Button
+              className="hidden shrink-0 rounded-full border border-white/10 bg-white text-black px-6 py-2 text-xs uppercase tracking-[0.4em] hover:bg-white/90 lg:inline-flex"
+              onClick={handleClick}
+            >
+              Dump
+            </Button>
+          )}
         </div>
+        {compact && (
+          <Button
+            className="w-full rounded-full border border-white/10 bg-white text-black py-3 text-xs uppercase tracking-[0.4em] hover:bg-white/90"
+            onClick={handleClick}
+          >
+            Dump
+          </Button>
+        )}
       </div>
     );
   };
 
   return (
     <>
-      {/* Mobile FAB */}
       <MobileFAB />
-      
-      {/* Desktop Input Card */}
       <div className="hidden lg:block">
-        <DesktopInputCard />
+        <InputCard />
       </div>
-      
-      {/* Mobile Input Card */}
       <div className="lg:hidden">
-        <DesktopInputCard />
+        <InputCard compact />
       </div>
     </>
   );

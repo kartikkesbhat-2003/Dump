@@ -11,9 +11,11 @@ axiosInstance.interceptors.request.use(
     if (token) {
       try {
         const parsedToken = JSON.parse(token);
+        config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${parsedToken}`;
       } catch {
         // If token is not JSON, use it directly
+        config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -31,8 +33,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       const tokenExpired = error.response?.data?.tokenExpired;
 
-      console.log("401 error detected, tokenExpired:", tokenExpired);
-
+      // Token expiration detected
       if (tokenExpired) {
         // Token has expired
         localStorage.removeItem("token");
@@ -41,7 +42,7 @@ axiosInstance.interceptors.response.use(
         window.location.href = "/login";
       } else {
         // Unauthorized access
-        console.warn("Unauthorized access - token may be invalid");
+        // Unauthorized access - token may be invalid
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         toast.error("Authentication failed. Please login again.");

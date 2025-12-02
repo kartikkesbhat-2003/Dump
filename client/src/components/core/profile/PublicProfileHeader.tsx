@@ -1,30 +1,29 @@
 import React from 'react';
-import { Calendar, Mail } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import type { User as UserType } from '@/types';
 
-interface ProfileHeaderProps {
-  user: UserType;
-  stats: {
-    postsCount: number;
-    totalUpvotes: number;
-    totalDownvotes: number;
-    joinedDate: string;
+interface PublicProfileHeaderProps {
+  user: {
+    _id: string;
+    username: string;
+    joinedAt?: string;
+    postsCount?: number;
   };
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => {
-  const formatJoinDate = (dateString: string) => {
+export const PublicProfileHeader: React.FC<PublicProfileHeaderProps> = ({ user }) => {
+  const formatJoinDate = (dateString?: string) => {
     try {
+      if (!dateString) return 'Recently';
       return formatDistanceToNow(new Date(dateString), { addSuffix: true });
     } catch {
       return 'Recently';
     }
   };
 
-  const initials = user.email?.charAt(0)?.toUpperCase() || 'U';
+  const initials = (user.username && user.username.charAt(0).toUpperCase()) || 'U';
 
   return (
     <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 sm:p-8 text-white shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-3xl">
@@ -36,14 +35,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
-            <p className="text-xl font-light leading-tight sm:text-2xl">{user.email.split('@')[0]}</p>
-            {user.isAnonymous ? (
-              <Badge variant="secondary" className="rounded-full border border-white/20 bg-white/10 text-[9px] uppercase tracking-[0.3em] text-white">
-                Anonymous
-              </Badge>
-            ) : (
-              <p className="text-[11px] uppercase tracking-[0.4em] text-white/50">Verified</p>
-            )}
+            <p className="text-xl font-light leading-tight sm:text-2xl">{user.username}</p>
+            <Badge variant="secondary" className="rounded-full border border-white/20 bg-white/10 text-[9px] uppercase tracking-[0.3em] text-white">
+              Public Profile
+            </Badge>
           </div>
         </div>
 
@@ -52,12 +47,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
             <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Identity imprint</p>
             <div className="flex flex-wrap gap-3 text-xs text-white/70 sm:text-sm">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-white/50" />
-                <span className="truncate">{user.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-white/50" />
-                <span>Joined {formatJoinDate(user.createdAt)}</span>
+                <span>Joined {formatJoinDate(user.joinedAt)}</span>
               </div>
             </div>
           </div>
@@ -65,7 +56,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
           <div className="inline-flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-white/70">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-white/40">Drops logged</p>
-              <p className="text-3xl font-light text-white">{stats.postsCount}</p>
+              <p className="text-3xl font-light text-white">{user.postsCount ?? 0}</p>
             </div>
           </div>
         </div>

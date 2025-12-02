@@ -1,6 +1,7 @@
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
 const Vote = require("../models/Vote");
+const { createNotification } = require('./notifications');
 
 // Create a new comment
 exports.createComment = async (req, res) => {
@@ -49,6 +50,20 @@ exports.createComment = async (req, res) => {
         if (parentComment) {
             await comment.populate("parentComment");
         }
+
+                // Create a notification for the post owner (if commenter is not the post owner)
+                try {
+                    await createNotification({
+                        userId: post.user,
+                        actorId: userId,
+                        type: 'comment',
+                        message: `Commented: ${content.slice(0, 120)}`,
+                        postId: postId,
+                        commentId: comment._id
+                    });
+                } catch (err) {
+                    console.error('Failed to create comment notification:', err);
+                }
 
         res.status(201).json({
             success: true,

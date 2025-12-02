@@ -65,8 +65,7 @@ export const Feed = () => {
     setOpenCommentPostId(null);
   };
 
-  const handleShare = (postId: string) => {
-    console.log('Share post:', postId);
+  const handleShare = () => {
     // Implement share logic
   };
 
@@ -88,140 +87,99 @@ export const Feed = () => {
     }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-          <div className="space-y-6">
+  const curatedPosts = token ? posts : posts.slice(0, 5);
 
-            {token ? (
-              /* Authenticated Feed Content */ 
-              <div className="space-y-4">
-                {/* Create Post Section */}
-                <CreatePostButton onCreatePost={handlePostCreated} />
-
-                {/* Posts */}
-                <div className="space-y-4">
-                  {loading && posts.length === 0 ? (
-                    // Loading skeleton
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-card border border-border rounded-lg p-4 animate-pulse">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-muted rounded-full"></div>
-                            <div className="space-y-2">
-                              <div className="h-4 bg-muted rounded w-24"></div>
-                              <div className="h-3 bg-muted rounded w-16"></div>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-3 bg-muted rounded w-full"></div>
-                            <div className="h-3 bg-muted rounded w-2/3"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : posts.length > 0 ? (
-                    <>
-                      {posts.map((post: any) => (
-                        <PostCard
-                          key={post._id}
-                          post={post}
-                          onUpvote={handleUpvote}
-                          onDownvote={handleDownvote}
-                          onComment={handleComment}
-                          onShare={handleShare}
-                          showComments={openCommentPostId === post._id}
-                          onCloseComments={handleCloseComments}
-                        />
-                      ))}
-                      
-                      {/* Load More Button */}
-                      {pagination.hasNext && (
-                        <div className="flex justify-center py-4">
-                          <button
-                            onClick={loadMorePosts}
-                            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                          >
-                            Load More Posts
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    // No posts found
-                    <div className="text-center py-12">
-                      <h3 className="text-lg font-semibold mb-2">No posts yet</h3>
-                      <p className="text-muted-foreground">
-                        Be the first to share something with the community!
-                      </p>
-                    </div>
-                  )}
+  const renderStream = () => {
+    if (loading && posts.length === 0) {
+      return (
+        <div className="space-y-10">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="relative pl-12">
+              <div className="absolute left-4 top-0 bottom-0 w-px bg-white/5" />
+              <div className="absolute left-[13px] top-6 h-2 w-2 rounded-full bg-white/30 animate-pulse" />
+              <div className="ml-4 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur">
+                <div className="h-4 w-40 rounded-full bg-white/10 mb-6" />
+                <div className="space-y-3">
+                  <div className="h-5 w-3/4 rounded-full bg-white/10" />
+                  <div className="h-5 w-2/3 rounded-full bg-white/10" />
+                  <div className="h-5 w-1/2 rounded-full bg-white/10" />
                 </div>
               </div>
-            ) : (
-              /* Unauthenticated Welcome Content */ 
-              <div className="space-y-4">
-                {/* Create Post Section for Guests */}
-                <CreatePostButton onCreatePost={handlePostCreated} />
-
-                {/* Show public posts for guests */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Latest Posts</h2>
-                  {loading ? (
-                    // Loading skeleton for guests
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-card border border-border rounded-lg p-4 animate-pulse">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-muted rounded-full"></div>
-                            <div className="space-y-2">
-                              <div className="h-4 bg-muted rounded w-24"></div>
-                              <div className="h-3 bg-muted rounded w-16"></div>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-3 bg-muted rounded w-full"></div>
-                            <div className="h-3 bg-muted rounded w-2/3"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : posts.length > 0 ? (
-                    <>
-                      {posts.slice(0, 5).map((post: any) => (
-                        <PostCard
-                          key={post._id}
-                          post={post}
-                          onUpvote={() => {}} // Disabled for guests
-                          onDownvote={() => {}} // Disabled for guests
-                          onComment={handleComment}
-                          onShare={handleShare}
-                          showComments={openCommentPostId === post._id}
-                          onCloseComments={handleCloseComments}
-                        />
-                      ))}
-                      
-                      {posts.length > 5 && (
-                        <div className="text-center py-4">
-                          <p className="text-muted-foreground">
-                            Sign in to see more posts and interact with the community
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-12">
-                      <h3 className="text-lg font-semibold mb-2">No posts yet</h3>
-                      <p className="text-muted-foreground">
-                        Be the first to share something with the community!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          ))}
         </div>
+      );
+    }
+
+    if (!curatedPosts.length) {
+      return (
+        <div className="rounded-3xl border border-white/5 bg-white/5 p-10 text-center">
+          <h3 className="text-2xl font-light tracking-[0.3em] text-white/80 uppercase">Empty Orbit</h3>
+          <p className="mt-3 text-sm text-white/60">
+            Be the first one to drop a thought and set the tone for the rest of the community.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-10">
+        {curatedPosts.map((post: any) => (
+          <PostCard
+            key={post._id}
+            post={post}
+            onUpvote={token ? handleUpvote : undefined}
+            onDownvote={token ? handleDownvote : undefined}
+            onComment={handleComment}
+            onShare={handleShare}
+            showComments={openCommentPostId === post._id}
+            onCloseComments={handleCloseComments}
+          />
+        ))}
+
+        {token && pagination.hasNext && (
+          <div className="flex justify-center">
+            <button
+              onClick={loadMorePosts}
+              className="rounded-full border border-white/10 px-8 py-3 text-xs font-semibold tracking-[0.3em] uppercase text-white/70 transition hover:border-white/40 hover:text-white"
+            >
+              Load More
+            </button>
+          </div>
+        )}
+
+        {!token && posts.length > 5 && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-center text-sm text-white/70">
+            Sign in to unlock the full stream and interact with every drop.
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <section className="relative isolate min-h-[100svh] overflow-hidden bg-gradient-to-b from-background via-background/95 to-black px-2 py-10 sm:px-6">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-70"
+        aria-hidden
+      >
+        <div
+          className="absolute left-1/2 top-[-30%] h-[40rem] w-[40rem] -translate-x-1/2 rounded-full blur-[220px]"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-[-10%] right-[-10%] h-[26rem] w-[26rem] rounded-full blur-[200px]"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.08), transparent 60%)" }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-4xl space-y-12">
+        <CreatePostButton onCreatePost={handlePostCreated} />
+        <div className="relative">
+          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+          {renderStream()}
+        </div>
+      </div>
+    </section>
   );
 };

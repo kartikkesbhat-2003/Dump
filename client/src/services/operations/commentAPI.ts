@@ -41,7 +41,7 @@ export const createComment = createAsyncThunk(
             toast.success("Comment created successfully");
             return response.data.comment;
         } catch (error: any) {
-            console.log("CREATE COMMENT API ERROR............", error);
+            console.error("CREATE COMMENT API ERROR:", error);
             toast.error(error.response?.data?.message || "Could not create comment");
             throw error;
         } finally {
@@ -75,7 +75,7 @@ export const getPostComments = createAsyncThunk(
                 pagination: response.data.pagination,
             };
         } catch (error: any) {
-            console.log("GET POST COMMENTS API ERROR............", error);
+            console.error("GET POST COMMENTS API ERROR:", error);
             toast.error(error.response?.data?.message || "Could not fetch comments");
             throw error;
         }
@@ -110,7 +110,7 @@ export const updateComment = createAsyncThunk(
             toast.success("Comment updated successfully");
             return response.data.comment;
         } catch (error: any) {
-            console.log("UPDATE COMMENT API ERROR............", error);
+            console.error("UPDATE COMMENT API ERROR:", error);
             toast.error(error.response?.data?.message || "Could not update comment");
             throw error;
         } finally {
@@ -144,7 +144,7 @@ export const deleteComment = createAsyncThunk(
             toast.success("Comment deleted successfully");
             return commentId;
         } catch (error: any) {
-            console.log("DELETE COMMENT API ERROR............", error);
+            console.error("DELETE COMMENT API ERROR:", error);
             toast.error(error.response?.data?.message || "Could not delete comment");
             throw error;
         } finally {
@@ -177,7 +177,7 @@ export const voteComment = createAsyncThunk(
             // Don't show toast for voting actions to avoid spam
             return { commentId, voteType, ...response.data };
         } catch (error: any) {
-            console.log("VOTE COMMENT API ERROR............", error);
+            console.error("VOTE COMMENT API ERROR:", error);
             toast.error(error.response?.data?.message || "Could not vote on comment");
             throw error;
         }
