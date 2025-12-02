@@ -178,7 +178,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <article className="group relative pl-10 sm:pl-14 w-full max-w-full overflow-hidden">
+    <article className="group relative pl-6 sm:pl-10 w-full max-w-full overflow-hidden">
       <span
         className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"
         aria-hidden
