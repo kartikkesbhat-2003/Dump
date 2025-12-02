@@ -1,5 +1,6 @@
 import { toast } from "react-hot-toast"
 import { setUser, setLoading as setProfileLoading } from "@/slices/profileSlice"
+import { getUserPosts } from './postAPI'
 import { authEndpoints } from "@/services/api"
 import { apiConnector } from "../apiConnector"
 import { setProgress } from "@/slices/loadingBarSlice"
@@ -47,7 +48,6 @@ export function getUserStats() {
       
       // For now, we'll calculate stats from the user's posts
       // This could be expanded to a dedicated endpoint if needed
-      const { getUserPosts } = await import('./postAPI')
       const userPostsResponse = await dispatch(getUserPosts())
       
       const stats = {
