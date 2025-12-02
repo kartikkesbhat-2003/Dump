@@ -179,10 +179,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <article className="group relative pl-6 sm:pl-10 w-full max-w-full overflow-hidden">
-      <span
-        className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"
-        aria-hidden
-      />
+      {/* left timeline line removed per request */}
       <span
         className="pointer-events-none absolute left-[11px] top-6 h-2 w-2 rounded-full bg-white/70 shadow-[0_0_25px_rgba(255,255,255,0.45)] transition duration-500 group-hover:scale-125"
         aria-hidden

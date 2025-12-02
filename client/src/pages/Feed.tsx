@@ -94,9 +94,8 @@ export const Feed = () => {
       return (
         <div className="space-y-10">
           {[1, 2, 3].map((index) => (
-            <div key={index} className="relative pl-12">
-              <div className="absolute left-4 top-0 bottom-0 w-px bg-white/5" />
-              <div className="absolute left-[13px] top-6 h-2 w-2 rounded-full bg-white/30 animate-pulse" />
+              <div key={index} className="relative pl-12">
+                {/* left timeline line and marker removed */}
               <div className="ml-4 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur">
                 <div className="h-4 w-40 rounded-full bg-white/10 mb-6" />
                 <div className="space-y-3">
@@ -175,8 +174,7 @@ export const Feed = () => {
 
       <div className="relative z-10 mx-auto max-w-4xl space-y-12">
         <CreatePostButton onCreatePost={handlePostCreated} />
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+          <div className="relative">
           {renderStream()}
         </div>
       </div>

@@ -440,7 +440,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       }
     };
 
-    const indentation = isReply ? 'ml-8 pl-6 border-l border-white/10' : 'pl-6';
+    const indentation = isReply ? 'ml-8 pl-6' : 'pl-6';
     return (
       <div className={`${indentation} ${isDeleting ? 'opacity-50' : ''} ${isOptimistic ? 'opacity-70' : ''}`}>
         <div className="relative flex gap-3 py-4">
@@ -448,9 +448,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             className="pointer-events-none absolute -left-3 top-4 h-2 w-2 rounded-full bg-white/60 shadow-[0_0_15px_rgba(255,255,255,0.45)]"
             aria-hidden
           />
-          {!isReply && (
-            <span className="pointer-events-none absolute -left-8 top-5 hidden h-px w-6 bg-white/15 sm:block" aria-hidden />
-          )}
+            {/* connector line removed from comments */}
           <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[0.65rem] uppercase tracking-[0.3em] text-white/70">
             {comment.isAnonymous ? (
               <User className="h-4 w-4" />

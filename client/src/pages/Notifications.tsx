@@ -220,7 +220,7 @@ export const Notifications: React.FC = () => {
 
         <div className="space-y-6">
           <div className="relative pl-12">
-            <div className="absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+            {/* left timeline line removed */}
             <div className="space-y-4">
               {loading ? (
                 <div className="text-center py-8">
