@@ -126,6 +126,12 @@
         @apply bg-background text-foreground;
         margin: 0;
         padding: 0;
+        overflow-x: hidden;
+    }
+
+    /* Ensure consistent box-sizing to avoid unexpected overflow */
+    *, *::before, *::after {
+        box-sizing: border-box;
     }
 
     /* Global scrollbar styles for all elements */

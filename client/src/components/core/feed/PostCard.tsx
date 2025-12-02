@@ -178,7 +178,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <article className="group relative pl-10 sm:pl-14">
+    <article className="group relative pl-10 sm:pl-14 w-full max-w-full overflow-hidden">
       <span
         className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"
         aria-hidden
@@ -188,7 +188,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         aria-hidden
       />
 
-      <div className="relative ml-2 rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
+      <div className="relative ml-2 w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
@@ -246,7 +246,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         <div className="mt-4 space-y-3">
           <h3
-            className="text-xl font-light leading-tight text-white hover:text-white/90"
+            className="text-xl font-light leading-tight text-white hover:text-white/90 break-words"
             onClick={handlePostClick}
             role="button"
             tabIndex={0}
@@ -259,7 +259,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           >
             {post.title}
           </h3>
-          <p className="text-sm leading-relaxed text-white/70">{post.content}</p>
+          <p className="text-sm leading-relaxed text-white/70 break-words">{post.content}</p>
 
           {post.imageUrl && (
             <div className="overflow-hidden rounded-2xl border border-white/8">
