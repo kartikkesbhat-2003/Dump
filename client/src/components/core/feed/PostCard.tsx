@@ -219,7 +219,6 @@ export const PostCard: React.FC<PostCardProps> = ({
               className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/4 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
             >
               {post.isAnonymous ? <User className="h-4 w-4" /> : getInitials()}
-              <span className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full border border-white/10 opacity-30" />
             </div>
             <div>
               <p

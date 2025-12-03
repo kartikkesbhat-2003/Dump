@@ -167,12 +167,12 @@ export const Login = () => {
               >
                 Password
               </Label>
-              <Link
+              {/* <Link
                 to="/forgot-password"
                 className="text-sm font-medium text-white/70 underline-offset-4 hover:text-white"
               >
                 Forgot?
-              </Link>
+              </Link> */}
             </div>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
