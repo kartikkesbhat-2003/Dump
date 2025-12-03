@@ -18,8 +18,8 @@ const { initSocket } = require('./utils/socket');
 const corsOptions = {
   origin: [
     "https://dumppp-api1.onrender.com",
-    "http://localhost:5173",
-    "https://dump-eight.vercel.app"
+    "https://dump-eight.vercel.app",
+    "https://dumpsocial.netlify.app"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
