@@ -69,7 +69,6 @@ export const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreatePost
         <div className="flex items-center gap-4">
           <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xs uppercase tracking-[0.3em] text-white/60">
             <User className="h-4 w-4" />
-            <span className="absolute -right-2 -top-2 h-6 w-6 rounded-full border border-white/10 opacity-30" />
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-[0.5em] text-white/40">Dump Console</p>

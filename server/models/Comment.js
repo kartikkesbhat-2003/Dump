@@ -27,6 +27,14 @@ const commentSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         }
+		,
+		// mentions persisted at creation/update time: list of { handle, user }
+		mentions: [
+			{
+				handle: { type: String, trim: true, lowercase: true },
+				user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+			}
+		]
 	},
 	{ timestamps: true }
 );

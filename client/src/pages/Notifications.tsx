@@ -49,14 +49,14 @@ export const Notifications: React.FC = () => {
       s = initSocket(parsed);
       const handler = (n: any) => {
         // prepend new notification
-        const mapped = {
+          const mapped = {
           id: n._id,
           type: n.type,
           title: n.type === 'comment' ? 'New comment on your post' : n.type === 'vote' ? 'Your post was upvoted' : 'Activity',
           message: n.message || '',
           isRead: n.isRead,
           createdAt: n.createdAt,
-          actionUser: n.actor ? { username: n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+            actionUser: n.actor ? { username: n.actor.username || n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
           relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
           relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
         };
@@ -77,14 +77,14 @@ export const Notifications: React.FC = () => {
     try {
       const res = await getNotifications(1, 200);
       const data = res?.data?.notifications || [];
-      const mapped = data.map((n: any) => ({
+        const mapped = data.map((n: any) => ({
         id: n._id,
         type: n.type,
         title: n.type === 'comment' ? 'New comment on your post' : n.type === 'vote' ? 'Your post was upvoted' : 'Activity',
         message: n.message || '',
         isRead: n.isRead,
         createdAt: n.createdAt,
-        actionUser: n.actor ? { username: n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+          actionUser: n.actor ? { username: n.actor.username || n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
         relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
         relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
       }));
@@ -219,7 +219,7 @@ export const Notifications: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="relative pl-12">
+          <div className="">
             {/* left timeline line removed */}
             <div className="space-y-4">
               {loading ? (
@@ -241,7 +241,7 @@ export const Notifications: React.FC = () => {
 
                         return (
                           <article key={item.key} className="relative ml-2 rounded-[28px] border border-white/10 bg-white/3 p-5 text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                            <div className="absolute left-6 top-7 h-2 w-2 rounded-full bg-white/40" />
+                           
                             <div className="flex items-start gap-4">
                               <div className="flex-shrink-0 mt-1 text-white/60"><ThumbsUp className="h-4 w-4" /></div>
                               <div className="flex-1">

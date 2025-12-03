@@ -5,6 +5,7 @@ export type ObjectId = string;
 export interface User {
   _id: ObjectId;
   email: string;
+  username?: string;
   password?: string; // Optional for client-side, never sent from server
   googleId?: string;
   isAnonymous: boolean;
@@ -217,5 +218,6 @@ export interface SignupData {
   password: string;
   confirmPassword: string;
   otp?: string;
+  username?: string;
 }
 

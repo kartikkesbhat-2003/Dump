@@ -3,6 +3,7 @@ import { CreatePostButton } from "@/components/core/feed/CreatePostButton";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { getAllPosts, votePost } from "@/services/operations/postAPI";
+import { toast } from 'react-hot-toast';
 
 export const Feed = () => {
   const { token } = useSelector((state: any) => state.auth);
@@ -65,8 +66,22 @@ export const Feed = () => {
     setOpenCommentPostId(null);
   };
 
-  const handleShare = () => {
-    // Implement share logic
+  const handleShare = async (postId: string) => {
+    const shareUrl = `${window.location.origin}/post/${postId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url: shareUrl });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Post link copied to clipboard');
+      } else {
+        // Fallback: open the URL in a new tab
+        window.open(shareUrl, '_blank');
+      }
+    } catch (err) {
+      console.error('Share failed:', err);
+      toast.error('Unable to share the post');
+    }
   };
 
   const handlePostCreated = () => {
@@ -94,14 +109,38 @@ export const Feed = () => {
       return (
         <div className="space-y-10">
           {[1, 2, 3].map((index) => (
-              <div key={index} className="relative pl-12">
-                {/* left timeline line and marker removed */}
-              <div className="ml-4 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur">
-                <div className="h-4 w-40 rounded-full bg-white/10 mb-6" />
-                <div className="space-y-3">
+            <div key={index} className="relative w-full">
+              <div className="relative w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur animate-pulse">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-white/6" />
+                    <div>
+                      <div className="h-4 w-28 rounded-full bg-white/10 mb-1" />
+                      <div className="h-3 w-20 rounded-full bg-white/10" />
+                    </div>
+                  </div>
+                  <div className="h-9 w-9 rounded-full bg-white/6" />
+                </div>
+
+                <div className="mt-4 space-y-3">
                   <div className="h-5 w-3/4 rounded-full bg-white/10" />
-                  <div className="h-5 w-2/3 rounded-full bg-white/10" />
-                  <div className="h-5 w-1/2 rounded-full bg-white/10" />
+                  <div className="h-4 w-full rounded-full bg-white/10" />
+                  <div className="h-40 w-full rounded-2xl bg-white/8" />
+                </div>
+
+                <div className="mt-4 flex items-center gap-4 text-xs text-white/50">
+                  <div className="h-3 w-20 rounded-full bg-white/10" />
+                  <div className="h-3 w-14 rounded-full bg-white/10" />
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-20 rounded-full bg-white/10" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-20 rounded-full bg-white/10" />
+                    <div className="h-9 w-20 rounded-full bg-white/10" />
+                  </div>
                 </div>
               </div>
             </div>

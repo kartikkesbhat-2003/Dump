@@ -17,10 +17,8 @@ const { initSocket } = require('./utils/socket');
 // Configure CORS early so preflight (OPTIONS) and other middleware get the headers
 const corsOptions = {
   origin: [
-    "https://dump-frontend-q1mu.onrender.com",
-    "https://dumppp-api1.onrender.com", // Allow API domain too
-    "http://localhost:5173", // For local development
-    "http://localhost:3000",  // Alternative local port
+    "https://dumppp-api1.onrender.com",
+    "http://localhost:5173",
     "https://dump-eight.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

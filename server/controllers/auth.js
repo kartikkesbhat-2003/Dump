@@ -54,7 +54,7 @@ exports.sendotp = async (req, res) => {
 
 exports.signup = async (req, res) => {
     try {
-        const { email, password, confirmPassword, otp } = req.body;
+        const { email, password, confirmPassword, otp, username } = req.body;
 
         if (!email || !password || !confirmPassword || !otp) {
             return res.status(400).json({
@@ -86,14 +86,33 @@ exports.signup = async (req, res) => {
             });
         }
 
+        // If username provided, validate uniqueness and format
+        if (username) {
+            // Basic validation: length and allowed characters are enforced by Mongoose schema,
+            // but we check presence and uniqueness here to provide clear errors.
+            const trimmed = String(username).trim().toLowerCase();
+            if (trimmed.length < 3) {
+                return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long' });
+            }
+
+            const existing = await User.findOne({ username: trimmed });
+            if (existing) {
+                return res.status(409).json({ success: false, message: 'Username already taken' });
+            }
+        }
+
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create a new user
-        const user = new User({
+        const userData = {
             email,
             password: hashedPassword,
-        });
+        };
+
+        if (username) userData.username = String(username).trim().toLowerCase();
+
+        const user = new User(userData);
 
         await user.save();
         res.status(201).json({
@@ -108,6 +127,43 @@ exports.signup = async (req, res) => {
             message: "Error registering user",
             error: error.message
         });
+    }
+}
+
+// Protected route to set username for existing users (used after OAuth or initial signup)
+exports.setUsername = async (req, res) => {
+    try {
+        const userId = req.user && req.user.userId;
+        const { username } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        if (!username || String(username).trim().length < 3) {
+            return res.status(400).json({ success: false, message: 'Username is required and must be at least 3 characters' });
+        }
+
+        const trimmed = String(username).trim().toLowerCase();
+
+        // Check uniqueness
+        const existing = await User.findOne({ username: trimmed });
+        if (existing && existing._id.toString() !== userId) {
+            return res.status(409).json({ success: false, message: 'Username already taken' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        user.username = trimmed;
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Username set', user });
+    } catch (error) {
+        console.error('Error setting username:', error);
+        res.status(500).json({ success: false, message: 'Failed to set username', error: error.message });
     }
 }
 
@@ -167,6 +223,26 @@ exports.login = async (req, res) => {
             message: "Error logging in user",
             error: error.message
         });
+    }
+};
+
+// Check username availability (query param: ?username=...)
+exports.checkUsername = async (req, res) => {
+    try {
+        const username = req.query.username;
+        if (!username || String(username).trim().length < 3) {
+            return res.status(400).json({ success: false, message: 'Username must be at least 3 characters' });
+        }
+
+        const trimmed = String(username).trim().toLowerCase();
+        const existing = await User.findOne({ username: trimmed });
+        if (existing) {
+            return res.status(200).json({ success: true, available: false });
+        }
+        return res.status(200).json({ success: true, available: true });
+    } catch (error) {
+        console.error('Error checking username availability:', error);
+        return res.status(500).json({ success: false, message: 'Failed to check username', error: error.message });
     }
 };
 

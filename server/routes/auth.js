@@ -3,12 +3,16 @@ const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 
-const { sendotp, signup, login, getCurrentUser } = require("../controllers/auth");
+const { sendotp, signup, login, getCurrentUser, checkUsername } = require("../controllers/auth");
 const { auth } = require("../middleware/auth");
+const { setUsername } = require("../controllers/auth");
 
 // Regular auth routes
 router.post("/sendotp", sendotp);
 router.post("/signup", signup);
+// Check username availability while typing (client-side)
+router.get("/check-username", checkUsername);
+router.post("/set-username", auth, setUsername);
 router.post("/login", login);
 
 // Protected routes

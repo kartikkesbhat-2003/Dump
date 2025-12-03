@@ -6,6 +6,8 @@ export const authEndpoints = {
   SIGNUP_API: BASE_URL + "/auth/signup",
   LOGIN_API: BASE_URL + "/auth/login",
   GET_CURRENT_USER: BASE_URL + `/auth/me`
+  ,
+  CHECK_USERNAME: BASE_URL + `/auth/check-username`
 };
 
 export const postEndpoints = {

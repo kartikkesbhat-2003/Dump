@@ -63,6 +63,8 @@ export const Signup = () => {
       errors.email = "Please enter a valid email address";
     }
 
+    // username is collected in the second step (Verify OTP)
+
     if (!formData.password) {
       errors.password = "Password is required";
     } else if (formData.password.length < 8) {
@@ -140,6 +142,8 @@ export const Signup = () => {
               <p className="text-sm text-red-400">{formState.errors.email}</p>
             )}
           </div>
+
+          
 
           <div className="space-y-2">
             <Label

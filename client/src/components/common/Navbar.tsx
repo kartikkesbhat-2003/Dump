@@ -110,7 +110,7 @@ export const Navbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
+                className="hidden md:hidden rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
                 onClick={() => setIsSearchOpen(true)}
               >
                 <Search className="h-4 w-4" />
@@ -202,9 +202,9 @@ export const Navbar = () => {
                         className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 text-white hover:bg-white/10"
                       >
                         <User className="h-4 w-4" />
-                        {user?.email && (
+                        {user && (
                           <span className="max-w-32 truncate text-sm">
-                            {user.email.split('@')[0]}
+                            {user.username || (user.email ? user.email.split('@')[0] : '')}
                           </span>
                         )}
                       </Button>

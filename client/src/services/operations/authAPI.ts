@@ -43,6 +43,7 @@ export function signUp(
   password: string,
   confirmPassword: string,
   otp: string,
+  username: string | undefined,
   navigate: any
 ) {
   return async (dispatch: any) => {
@@ -54,6 +55,7 @@ export function signUp(
         password,
         confirmPassword,
         otp,
+        username,
       })
 
       // Signup API response handled

@@ -119,10 +119,44 @@ export const UserPostsList: React.FC<UserPostsListProps> = ({ userId }) => {
 
   if (loading && posts.length === 0) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-10 text-center text-white">
-        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-white" />
-        <p className="text-sm uppercase tracking-[0.4em] text-white/50">Syncing</p>
-        <p className="mt-2 text-white/70">Retrieving your latest drops...</p>
+      <div className="space-y-6">
+        {[1,2,3].map(i => (
+          <div key={i} className="relative w-full">
+            <div className="relative w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur animate-pulse">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-white/6" />
+                  <div>
+                    <div className="h-4 w-28 rounded-full bg-white/10 mb-1" />
+                    <div className="h-3 w-20 rounded-full bg-white/10" />
+                  </div>
+                </div>
+                <div className="h-9 w-9 rounded-full bg-white/6" />
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <div className="h-5 w-3/4 rounded-full bg-white/10" />
+                <div className="h-4 w-full rounded-full bg-white/10" />
+                <div className="h-40 w-full rounded-2xl bg-white/8" />
+              </div>
+
+              <div className="mt-4 flex items-center gap-4 text-xs text-white/50">
+                <div className="h-3 w-20 rounded-full bg-white/10" />
+                <div className="h-3 w-14 rounded-full bg-white/10" />
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-20 rounded-full bg-white/10" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-20 rounded-full bg-white/10" />
+                  <div className="h-9 w-20 rounded-full bg-white/10" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

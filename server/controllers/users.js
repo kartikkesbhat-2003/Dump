@@ -20,7 +20,7 @@ exports.getPublicProfile = async (req, res) => {
 
     const publicProfile = {
       _id: user._id,
-      username: user.email ? user.email.split('@')[0] : 'user',
+      username: user.username || (user.email ? user.email.split('@')[0] : 'user'),
       joinedAt: user.createdAt,
       postsCount,
     };
@@ -29,5 +29,20 @@ exports.getPublicProfile = async (req, res) => {
   } catch (err) {
     console.error('Error fetching public profile', err);
     res.status(500).json({ success: false, message: 'Error fetching profile' });
+  }
+};
+
+// Search users by username (prefix). Public endpoint.
+exports.searchUsers = async (req, res) => {
+  try {
+    const q = (req.query.q || '').toString().trim().toLowerCase();
+    if (!q) return res.status(200).json({ success: true, users: [] });
+
+    const regex = new RegExp('^' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const users = await User.find({ username: { $regex: regex } }).select('username').limit(8).lean();
+    res.status(200).json({ success: true, users });
+  } catch (err) {
+    console.error('Error searching users', err);
+    res.status(500).json({ success: false, users: [] });
   }
 };

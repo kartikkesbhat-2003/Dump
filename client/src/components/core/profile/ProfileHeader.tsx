@@ -24,7 +24,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
     }
   };
 
-  const initials = user.email?.charAt(0)?.toUpperCase() || 'U';
+  const initials = (user.username ? user.username.charAt(0) : user.email?.charAt(0))?.toUpperCase() || 'U';
 
   return (
     <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 sm:p-8 text-white shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-3xl">
@@ -36,7 +36,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
-            <p className="text-xl font-light leading-tight sm:text-2xl">{user.email.split('@')[0]}</p>
+            <p className="text-xl font-light leading-tight sm:text-2xl">{user.username || (user.email ? user.email.split('@')[0] : 'traveler')}</p>
             {user.isAnonymous ? (
               <Badge variant="secondary" className="rounded-full border border-white/20 bg-white/10 text-[9px] uppercase tracking-[0.3em] text-white">
                 Anonymous

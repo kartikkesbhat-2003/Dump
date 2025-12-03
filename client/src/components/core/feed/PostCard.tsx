@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, MessageCircle, Share, MoreHorizontal, User, ExternalLink } from 'lucide-react';
+import { ArrowUp, ArrowDown, MessageCircle, Share, MoreHorizontal, User, ExternalLink, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { CommentSection } from './CommentSection';
+import { deletePost } from '@/services/operations/postAPI';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface PostUser {
   _id: string;
   email: string;
+  username?: string;
 }
 
 interface Post {
@@ -33,6 +44,7 @@ interface PostCardProps {
   onDownvote?: (postId: string) => void;
   onComment?: (postId: string) => void;
   onShare?: (postId: string) => void;
+  onDelete?: (postId: string) => void;
   showComments?: boolean;
   onCloseComments?: () => void;
 }
@@ -43,10 +55,13 @@ export const PostCard: React.FC<PostCardProps> = ({
   onDownvote,
   onComment,
   onShare,
+  onDelete,
   showComments = false,
   onCloseComments
 }) => {
   const { token } = useSelector((state: any) => state.auth);
+  const profileUser = useSelector((state: any) => state.profile?.user);
+  const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(post.userVote || null);
   const [localUpvotes, setLocalUpvotes] = useState(post.upvotes);
@@ -140,8 +155,14 @@ export const PostCard: React.FC<PostCardProps> = ({
     if (post.isAnonymous) {
       return 'Anonymous';
     }
-    // Extract username from email or use email
-    const emailParts = post.user.email.split('@');
+    // Prefer explicit username from embedded post user
+    if (post.user && (post.user as any).username) return (post.user as any).username;
+    // If viewing a profile page, prefer profile username when IDs match
+    if (profileUser && post.user && profileUser._id && post.user._id && profileUser._id === post.user._id && profileUser.username) {
+      return profileUser.username;
+    }
+    // Fall back to email local-part
+    const emailParts = post.user?.email ? post.user.email.split('@') : ['traveler'];
     return emailParts[0];
   };
 
@@ -177,15 +198,12 @@ export const PostCard: React.FC<PostCardProps> = ({
     e.stopPropagation();
   };
 
-  return (
-    <article className="group relative pl-6 sm:pl-10 w-full max-w-full overflow-hidden">
-      {/* left timeline line removed per request */}
-      <span
-        className="pointer-events-none absolute left-[11px] top-6 h-2 w-2 rounded-full bg-white/70 shadow-[0_0_25px_rgba(255,255,255,0.45)] transition duration-500 group-hover:scale-125"
-        aria-hidden
-      />
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-      <div className="relative ml-2 w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
+  return (
+    <article className="group relative w-full overflow-hidden">
+
+      <div className="relative w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
@@ -357,6 +375,61 @@ export const PostCard: React.FC<PostCardProps> = ({
             >
               <Share className="h-4 w-4" />
             </Button>
+
+            {/* Delete button - visible only to post owner */}
+            {(() => {
+              try {
+                const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+                if (currentUser && currentUser._id && post.user && post.user._id && currentUser._id === post.user._id) {
+                  return (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white text-destructive"
+                        onClick={(e) => {
+                          handleActionClick(e);
+                          setIsDeleteOpen(true);
+                        }}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+
+                      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete post</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete the post and its associated comments and votes. Do you want to continue?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <div className="mt-4 flex items-center justify-center gap-3 sm:justify-end">
+                            <AlertDialogCancel onClick={() => setIsDeleteOpen(false)}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={async () => {
+                                try {
+                                  await dispatch(deletePost(post._id));
+                                  setIsDeleteOpen(false);
+                                  onDelete?.(post._id);
+                                  if (!onDelete) navigate('/');
+                                } catch (err) {
+                                  console.error('Failed to delete post', err);
+                                }
+                              }}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </div>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  );
+                }
+              } catch (e) {
+                // ignore parse errors
+              }
+              return null;
+            })()}
           </div>
         </div>
 
@@ -367,6 +440,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         >
           <CommentSection
             postId={post._id}
+            postOwnerId={post.user?._id}
             isVisible={showComments}
             onClose={onCloseComments || (() => {})}
           />

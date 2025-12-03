@@ -46,7 +46,7 @@ export const Profile: React.FC = () => {
     window.location.reload();
   };
 
-  const codename = user?.email.split('@')[0] ?? 'traveler';
+  const codename = (user?.username || user?.email.split('@')[0]) ?? 'traveler';
 
   const renderContent = () => {
     if (loading || profileLoading) {
