@@ -38,8 +38,8 @@ exports.createPost = async (req, res) => {
         
         await post.save();
         
-        // Populate user data for response
-        await post.populate("user", "email");
+        // Populate user data for response (include username so frontend can show handle)
+        await post.populate("user", "username email");
 
         res.status(201).json({
             success: true,
@@ -79,7 +79,8 @@ exports.getAllPosts = async (req, res) => {
         }
 
         const posts = await Post.find(query)
-            .populate("user", "email")
+            // Include username so clients can show proper handle instead of deriving from email
+            .populate("user", "username email")
             .sort({ [sortBy]: sortOrder })
             .skip(skip)
             .limit(limit);
@@ -138,7 +139,8 @@ exports.getPostById = async (req, res) => {
         const userId = req.user?.userId; // Optional for unauthenticated users
         
         const post = await Post.findById(id)
-            .populate("user", "email");
+            // Include username for post owner
+            .populate("user", "username email");
 
         if (!post) {
             return res.status(404).json({
@@ -151,7 +153,8 @@ exports.getPostById = async (req, res) => {
         const upvotes = await Vote.countDocuments({ post: id, voteType: 'upvote' });
         const downvotes = await Vote.countDocuments({ post: id, voteType: 'downvote' });
         const comments = await Comment.find({ post: id })
-            .populate("user", "email")
+            // Include username for comment authors
+            .populate("user", "username email")
             .populate("parentComment")
             .sort({ createdAt: -1 });
 
@@ -284,7 +287,8 @@ exports.getUserPosts = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const posts = await Post.find({ user: userId })
-            .populate("user", "email")
+            // Include username for owner
+            .populate("user", "username email")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -420,7 +424,8 @@ exports.getPostsByUserId = async (req, res) => {
         }
 
         const posts = await Post.find(query)
-            .populate('user', 'email')
+            // Include username for public profile listings
+            .populate('user', 'username email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);

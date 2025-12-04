@@ -36,7 +36,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, stats }) => 
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
-            <p className="text-xl font-light leading-tight sm:text-2xl">{user.username || (user.email ? user.email.split('@')[0] : 'traveler')}</p>
+            <p className="text-xl font-light leading-tight sm:text-2xl">
+              {user.username || 'traveler'}
+            </p>
             {user.isAnonymous ? (
               <Badge variant="secondary" className="rounded-full border border-white/20 bg-white/10 text-[9px] uppercase tracking-[0.3em] text-white">
                 Anonymous

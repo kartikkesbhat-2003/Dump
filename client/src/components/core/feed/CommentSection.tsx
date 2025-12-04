@@ -41,7 +41,18 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
   onClose,
   postOwnerId
 }) => {
-  const { token, user } = useSelector((state: any) => state.auth);
+  // Token lives in auth slice
+  const { token } = useSelector((state: any) => state.auth);
+  // Current user profile (includes _id and username) lives in profile slice, with localStorage fallback
+  const profileUser = useSelector((state: any) => state.profile?.user);
+  const user = profileUser || (() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
   const dispatch = useDispatch();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +60,13 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isCreatingComment, setIsCreatingComment] = useState(false);
   const [deletingComments, setDeletingComments] = useState<Set<string>>(new Set());
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    commentId: string | null;
+  }>({
+    isOpen: false,
+    commentId: null,
+  });
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -250,14 +268,23 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
 
   const handleDeleteComment = async (commentId: string) => {
     if (!token || deletingComments.has(commentId)) return;
+    setDeleteConfirmation({ isOpen: true, commentId });
+  };
 
-    const confirmDelete = window.confirm('Are you sure you want to delete this comment? This action cannot be undone.');
-    if (!confirmDelete) return;
+  const handleConfirmDelete = async () => {
+    const { commentId } = deleteConfirmation;
+    if (!commentId || !token || deletingComments.has(commentId)) return;
 
     setDeletingComments(prev => new Set(prev).add(commentId));
+    setDeleteConfirmation({ isOpen: false, commentId: null });
 
     try {
-      await dispatch(deleteComment(commentId) as any);
+      const result = await dispatch(deleteComment(commentId) as any);
+      
+      // Check if deletion was successful
+      if (result?.type?.endsWith('/rejected')) {
+        throw new Error(result?.error?.message || 'Failed to delete comment');
+      }
       
       // Remove comment from local state
       const removeComment = (comments: Comment[]): Comment[] => {
@@ -275,8 +302,10 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
       };
 
       setComments(prev => removeComment(prev || []));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting comment:', error);
+      const errorMsg = error?.message || 'Failed to delete comment';
+      alert(`Error: ${errorMsg}`);
     } finally {
       setDeletingComments(prev => {
         const newSet = new Set(prev);
@@ -284,6 +313,10 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
         return newSet;
       });
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmation({ isOpen: false, commentId: null });
   };
 
   const canDeleteComment = (comment: Comment) => {
@@ -299,11 +332,9 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
     if (anonymous) return 'Anonymous';
     if (!user) return 'Unknown User';
     // Prefer username from backend when available
-    // user may not have email (anonymous) so guard accordingly
     if ((user as any).username) return (user as any).username;
-    if (!user.email) return 'Unknown User';
-    const emailParts = user.email.split('@');
-    return emailParts[0];
+    // Do not derive a username from email local-part; fall back to generic label
+    return 'Unknown User';
   };
 
   const getInitials = (user: CommentUser | undefined, anonymous: boolean) => {
@@ -453,11 +484,12 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
       }
     };
 
-    const indentation = isReply ? 'ml-8 pl-6 border-l border-white/10' : 'pl-6';
+    // Slightly tighter vertical spacing; clearer thread connector for replies
+    const indentation = isReply ? 'sm:ml-7 sm:pl-5 ml-3 pl-3 border-l border-white/15' : 'pl-5';
     return (
       <div className={`${indentation} ${isDeleting ? 'opacity-50' : ''} ${isOptimistic ? 'opacity-70' : ''}`}>
-        <div className="relative flex gap-3 py-4">
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[0.65rem] uppercase tracking-[0.3em] text-white/70">
+        <div className="relative flex gap-2 sm:gap-3 py-2 sm:py-3">
+          <div className="relative flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[0.55rem] sm:text-[0.65rem] uppercase tracking-[0.3em] text-white/70 flex-shrink-0">
             {comment.isAnonymous ? (
               <User className="h-4 w-4" />
             ) : (
@@ -466,17 +498,17 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/40">
-              <div className="flex flex-wrap items-center gap-2 text-white/70">
-                <span className="text-sm font-medium text-white/90 tracking-normal">
+            <div className="flex items-center justify-between text-[0.65rem] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white/40 gap-1 sm:gap-2">
+              <div className="flex flex-wrap items-center gap-1 text-white/70">
+                <span className="text-xs sm:text-sm font-medium text-white/90 tracking-normal">
                   {getDisplayName(comment.user, comment.isAnonymous)}
                 </span>
                 {comment.isAnonymous && (
-                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[0.55rem] uppercase tracking-[0.3em] text-white/50">
-                    Anonymous
+                  <span className="rounded-full border border-white/10 px-1.5 py-0.5 text-[0.45rem] sm:text-[0.55rem] uppercase tracking-[0.2em] text-white/50">
+                    Anon
                   </span>
                 )}
-                <span className="text-[0.6rem] uppercase tracking-[0.35em] text-white/40">
+                <span className="text-[0.5rem] sm:text-[0.6rem] uppercase tracking-[0.25em] text-white/40">
                   {isOptimistic ? 'Posting…' : formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </span>
               </div>
@@ -487,103 +519,112 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 rounded-full border border-white/10 p-0 text-white/60 hover:text-white"
-                    onClick={() => setShowMenu(!showMenu)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(!showMenu);
+                    }}
                     disabled={isDeleting}
                   >
                     <MoreHorizontal className="h-3 w-3" />
                   </Button>
 
                   {showMenu && (
-                    <div className="absolute right-0 top-8 min-w-32 rounded-2xl border border-white/10 bg-background/80 px-3 py-2 text-left text-xs uppercase tracking-[0.3em] text-white/60 backdrop-blur">
-                      <button
-                        onClick={() => {
-                          handleDeleteComment(comment._id);
+                    <>
+                      <div className="absolute right-0 top-8 z-50 min-w-32 rounded-2xl border border-white/10 bg-background/80 px-3 py-2 text-left text-xs uppercase tracking-[0.3em] text-white/60 shadow-lg backdrop-blur">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleDeleteComment(comment._id);
+                            setShowMenu(false);
+                          }}
+                          disabled={isDeleting}
+                          className="flex w-full items-center gap-2 rounded text-red-400 transition hover:bg-red-500/10 hover:text-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </button>
+                      </div>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setShowMenu(false);
-                        }}
-                        disabled={isDeleting}
-                        className="flex w-full items-center gap-2 text-red-400 transition hover:text-red-200"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </button>
-                    </div>
-                  )}
-
-                  {showMenu && (
-                    <div className="fixed inset-0" onClick={() => setShowMenu(false)} />
+                        }} 
+                      />
+                    </>
                   )}
                 </div>
               )}
             </div>
 
-            <p className="mt-2 text-sm leading-relaxed text-white/80">{comment.content}</p>
+            <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-relaxed text-white/80">{comment.content}</p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.65rem] uppercase tracking-[0.3em] text-white/50">
+            <div className="mt-1.5 sm:mt-2.5 flex flex-wrap items-center gap-1 sm:gap-2 text-[0.5rem] sm:text-[0.65rem] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white/50">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-7 rounded-full border border-white/10 px-3 text-white/60 transition ${
+                className={`h-6 w-6 sm:h-7 sm:w-9 sm:w-auto rounded-full border border-white/10 px-0 sm:px-3 text-white/60 transition justify-center ${
                   localUserVote === 'upvote' ? 'bg-white/10 text-white border-white/30' : 'hover:text-white'
                 } ${!token || isDeleting || isOptimistic ? 'opacity-40 cursor-not-allowed' : ''}`}
                 onClick={() => handleVoteComment(comment._id, 'upvote')}
                 disabled={!token || isDeleting || isOptimistic}
               >
-                <ArrowUp className="mr-2 h-3 w-3" />
-                {localUpvotes}
+                <ArrowUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 sm:mr-1.5" />
+                <span className="hidden sm:inline text-[0.65rem]">{localUpvotes}</span>
               </Button>
 
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-7 rounded-full border border-white/10 px-3 text-white/60 transition ${
+                className={`h-6 w-6 sm:h-7 sm:w-9 sm:w-auto rounded-full border border-white/10 px-0 sm:px-3 text-white/60 transition justify-center ${
                   localUserVote === 'downvote' ? 'bg-white/10 text-white border-white/30' : 'hover:text-white'
                 } ${!token || isDeleting || isOptimistic ? 'opacity-40 cursor-not-allowed' : ''}`}
                 onClick={() => handleVoteComment(comment._id, 'downvote')}
                 disabled={!token || isDeleting || isOptimistic}
               >
-                <ArrowDown className="mr-2 h-3 w-3" />
-                {/* downvote count hidden per UX */}
+                <ArrowDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </Button>
 
               {!isReply && token && !isOptimistic && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 rounded-full border border-white/10 px-4 text-white/60 transition hover:text-white"
+                  className="h-6 w-6 sm:h-7 sm:w-9 sm:w-auto rounded-full border border-white/10 px-0 sm:px-4 text-white/60 transition hover:text-white justify-center"
                   onClick={() => setShowReplyForm(!showReplyForm)}
                   disabled={isDeleting}
                 >
-                  <MessageCircle className="mr-2 h-3 w-3" />
-                  Reply
+                  <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 sm:mr-1.5" />
+                  <span className="hidden sm:inline text-[0.65rem]">Reply</span>
                 </Button>
               )}
             </div>
 
             {showReplyForm && !isDeleting && (
-              <form onSubmit={handleCreateReply} className="mt-4 space-y-3">
+              <form onSubmit={handleCreateReply} className="mt-2 sm:mt-4 space-y-2 sm:space-y-3">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="Drop a reply"
-                  className="w-full resize-none rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/40"
-                  rows={2}
+                  className="w-full resize-none rounded-2xl border border-white/10 bg-transparent px-3 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-sm text-white/80 outline-none transition focus:border-white/40"
+                  rows={1}
                 />
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/50">
-                  <label className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 text-[0.65rem] sm:text-xs text-white/50">
+                  <label className="flex items-center gap-1.5 sm:gap-2">
                     <input
                       type="checkbox"
                       checked={isAnonymousReply}
                       onChange={(e) => setIsAnonymousReply(e.target.checked)}
-                      className="rounded border-white/20 bg-transparent"
+                      className="rounded border-white/20 bg-transparent w-3 h-3"
                     />
-                    Reply anonymously
+                    <span className="text-[0.65rem] sm:text-xs">Reply anon</span>
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="rounded-full px-4 text-white/60 hover:text-white"
+                      className="rounded-full px-2 sm:px-4 py-1 text-[0.65rem] sm:text-xs text-white/60 hover:text-white h-auto"
                       onClick={() => {
                         setShowReplyForm(false);
                         setReplyContent('');
@@ -595,7 +636,7 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
                     <Button
                       type="submit"
                       size="sm"
-                      className="rounded-full px-5"
+                      className="rounded-full px-2 sm:px-5 py-1 text-[0.65rem] sm:text-xs h-auto"
                       disabled={!replyContent.trim() || isCreatingReply}
                     >
                       {isCreatingReply ? 'Replying…' : 'Reply'}
@@ -606,7 +647,7 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
             )}
 
             {comment.replies && comment.replies.length > 0 && (
-              <div className="mt-2 space-y-2">
+              <div className="mt-1.5 sm:mt-2 space-y-1">
                 {comment.replies
                   .filter(reply => reply && reply._id)
                   .map((reply) => (
@@ -623,7 +664,39 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="pt-6 text-white/80">
+    <>
+      {deleteConfirmation.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-3xl border border-white/15 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl backdrop-blur-xl">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-white">Delete Comment?</h2>
+                <p className="text-sm text-white/70">
+                  This action cannot be undone. The comment will be permanently removed.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleCancelDelete}
+                  className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  Keep it
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deletingComments.has(deleteConfirmation.commentId || '')}
+                  className="flex-1 rounded-full bg-red-500/80 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deletingComments.has(deleteConfirmation.commentId || '') ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pt-6 text-white/80">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.35em] text-white/40">
         <span>Comment Stream</span>
         <Button
@@ -642,8 +715,8 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="What's your take?"
-            className="w-full resize-none rounded-3xl border border-white/10 bg-transparent px-5 py-4 text-sm text-white/80 outline-none transition focus:border-white/40"
-            rows={3}
+            className="w-full resize-none rounded-3xl border border-white/10 bg-transparent px-5 py-2 text-sm text-white/80 outline-none transition focus:border-white/40"
+            rows={2}
           />
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/50">
             <label className="flex items-center gap-2">
@@ -668,7 +741,7 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
         </form>
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {loading && (!comments || comments.length === 0) ? (
           <div className="py-6 text-center text-sm text-white/50">Loading comments…</div>
         ) : comments && comments.length > 0 ? (
@@ -702,5 +775,6 @@ export const CommentSection: React.FC<CommentSectionPropsExtended> = ({
         )}
       </div>
     </div>
+    </>
   );
 };

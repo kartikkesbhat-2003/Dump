@@ -45,7 +45,8 @@ exports.createComment = async (req, res) => {
         });
 
         await comment.save();
-        await comment.populate("user", "email");
+        // Include username so frontend can display proper handle
+        await comment.populate("user", "username email");
         
         if (parentComment) {
             await comment.populate("parentComment");
@@ -98,20 +99,22 @@ exports.getPostComments = async (req, res) => {
             });
         }
 
-        // Get top-level comments (no parent)
+        // Get top-level comments (no parent), oldest first for natural reading order
         const comments = await Comment.find({ 
             post: postId, 
             parentComment: null 
         })
-        .populate("user", "email")
-        .sort({ createdAt: -1 })
+        // Include username for comment authors
+        .populate("user", "username email")
+        .sort({ createdAt: 1 })
         .skip(skip)
         .limit(limit);
 
         // Get replies for each comment, vote counts, and user votes
         const commentsWithReplies = await Promise.all(comments.map(async (comment) => {
             const replies = await Comment.find({ parentComment: comment._id })
-                .populate("user", "email")
+                // Include username for reply authors
+                .populate("user", "username email")
                 .sort({ createdAt: 1 });
 
             const upvotes = await Vote.countDocuments({ comment: comment._id, voteType: 'upvote' });
@@ -209,7 +212,8 @@ exports.updateComment = async (req, res) => {
         if (isAnonymous !== undefined) comment.isAnonymous = isAnonymous;
 
         await comment.save();
-        await comment.populate("user", "email");
+        // Include username so updated comment has proper handle
+        await comment.populate("user", "username email");
 
         res.status(200).json({
             success: true,
@@ -240,11 +244,20 @@ exports.deleteComment = async (req, res) => {
             });
         }
 
-        // Check if user owns the comment
-        if (comment.user.toString() !== userId) {
+        // Check if user owns the comment OR is the owner of the post the comment belongs to
+        const isCommentOwner = comment.user.toString() === userId.toString();
+        let isPostOwner = false;
+        if (!isCommentOwner) {
+            const post = await Post.findById(comment.post);
+            if (post && post.user.toString() === userId.toString()) {
+                isPostOwner = true;
+            }
+        }
+
+        if (!isCommentOwner && !isPostOwner) {
             return res.status(403).json({
                 success: false,
-                message: "You can only delete your own comments"
+                message: "You can only delete your own comments or comments on your own posts"
             });
         }
 

@@ -56,7 +56,8 @@ export const Notifications: React.FC = () => {
           message: n.message || '',
           isRead: n.isRead,
           createdAt: n.createdAt,
-            actionUser: n.actor ? { username: n.actor.username || n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+            // Use actor.username from backend; avoid deriving from email
+            actionUser: n.actor ? { username: n.actor.username || 'user', isAnonymous: false } : undefined,
           relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
           relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
         };
@@ -84,7 +85,8 @@ export const Notifications: React.FC = () => {
         message: n.message || '',
         isRead: n.isRead,
         createdAt: n.createdAt,
-          actionUser: n.actor ? { username: n.actor.username || n.actor.email?.split('@')[0], isAnonymous: false } : undefined,
+          // Prefer username provided by backend; do not derive from email
+          actionUser: n.actor ? { username: n.actor.username || 'user', isAnonymous: false } : undefined,
         relatedPost: n.post ? { id: n.post._id, title: n.post.title } : undefined,
         relatedComment: n.comment ? { id: n.comment._id, content: n.comment.content } : undefined,
       }));

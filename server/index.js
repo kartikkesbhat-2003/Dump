@@ -19,7 +19,8 @@ const corsOptions = {
   origin: [
     "https://dumppp-api1.onrender.com",
     "https://dump-eight.vercel.app",
-    "https://dumpsocial.netlify.app"
+    "https://dumpsocial.netlify.app",
+    "http://localhost:5173"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [

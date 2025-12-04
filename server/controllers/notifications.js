@@ -57,7 +57,8 @@ exports.getNotifications = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const notifications = await Notification.find({ user: userId })
-      .populate('actor', 'email')
+      // Include username for the actor so clients don't derive it from email
+      .populate('actor', 'username email')
       .populate('post', 'title')
       .populate('comment', 'content')
       .sort({ createdAt: -1 })

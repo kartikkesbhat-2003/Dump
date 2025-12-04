@@ -20,7 +20,8 @@ exports.getPublicProfile = async (req, res) => {
 
     const publicProfile = {
       _id: user._id,
-      username: user.username || (user.email ? user.email.split('@')[0] : 'user'),
+      // Use stored username only; do not derive from email local-part
+      username: user.username || 'user',
       joinedAt: user.createdAt,
       postsCount,
     };

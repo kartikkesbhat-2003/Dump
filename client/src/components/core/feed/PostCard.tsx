@@ -161,9 +161,8 @@ export const PostCard: React.FC<PostCardProps> = ({
     if (profileUser && post.user && profileUser._id && post.user._id && profileUser._id === post.user._id && profileUser.username) {
       return profileUser.username;
     }
-    // Fall back to email local-part
-    const emailParts = post.user?.email ? post.user.email.split('@') : ['traveler'];
-    return emailParts[0];
+    // Fall back to a generic handle instead of deriving from email
+    return 'traveler';
   };
 
   const getInitials = () => {
@@ -199,13 +198,14 @@ export const PostCard: React.FC<PostCardProps> = ({
   };
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   return (
     <article className="group relative w-full overflow-hidden">
 
-      <div className="relative w-full rounded-2xl border border-white/8 bg-white/3 px-4 py-4 shadow-sm backdrop-blur">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <div className="relative w-full rounded-2xl border border-white/8 bg-white/3 px-3 py-3 sm:px-4 sm:py-4 shadow-sm backdrop-blur">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div
               onClick={handleUserClick}
               role={post.isAnonymous ? undefined : 'button'}
@@ -216,13 +216,13 @@ export const PostCard: React.FC<PostCardProps> = ({
                   navigate(`/user/${post.user._id}`);
                 }
               }}
-              className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/4 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
+              className="relative flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/4 text-[0.6rem] sm:text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
             >
               {post.isAnonymous ? <User className="h-4 w-4" /> : getInitials()}
             </div>
-            <div>
+            <div className="min-w-0">
               <p
-                className={`text-sm font-medium leading-tight ${post.isAnonymous ? 'text-white/90' : 'text-white/90 cursor-pointer hover:underline'}`}
+                className={`truncate text-sm sm:text-[0.95rem] font-medium leading-tight ${post.isAnonymous ? 'text-white/90' : 'text-white/90 cursor-pointer hover:underline'}`}
                 onClick={(e) => {
                   handleUserClick(e as any);
                 }}
@@ -242,25 +242,91 @@ export const PostCard: React.FC<PostCardProps> = ({
                   </span>
                 )}
               </p>
-              <p className="text-xs text-white/40">
+              <p className="text-[0.7rem] sm:text-xs text-white/40">
                 {formatTimeAgo(post.createdAt)}
               </p>
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full border border-white/10 text-white/60 hover:border-white/40 hover:text-white"
-            onClick={handleActionClick}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full border border-white/10 text-white/60 hover:border-white/40 hover:text-white"
+              onClick={(e) => {
+                handleActionClick(e);
+                setShowMenu((prev) => !prev);
+              }}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+
+            {showMenu && (
+              <>
+                <div className="absolute right-0 mt-2 min-w-40 rounded-2xl border border-white/10 bg-background/90 px-3 py-2 text-xs text-white/70 backdrop-blur shadow-lg z-20">
+                  <button
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 text-left"
+                    onClick={() => {
+                      setShowMenu(false);
+                      handlePostClick();
+                    }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Open post</span>
+                  </button>
+
+                  <button
+                    className="mt-1 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      onShare?.(post._id);
+                    }}
+                  >
+                    <Share className="h-3.5 w-3.5" />
+                    <span>Share</span>
+                  </button>
+
+                  {(() => {
+                    try {
+                      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+                      if (currentUser && currentUser._id && post.user && post.user._id && currentUser._id === post.user._id) {
+                        return (
+                          <button
+                            className="mt-1 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-red-400 hover:bg-red-500/10 hover:text-red-200 text-left"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowMenu(false);
+                              setIsDeleteOpen(true);
+                            }}
+                          >
+                            <Trash className="h-3.5 w-3.5" />
+                            <span>Delete post</span>
+                          </button>
+                        );
+                      }
+                    } catch {
+                      // ignore parse errors
+                    }
+                    return null;
+                  })()}
+                </div>
+                {/* backdrop to close menu on outside click */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                  }}
+                />
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 sm:mt-4 space-y-2.5 sm:space-y-3">
           <h3
-            className="text-xl font-light leading-tight text-white hover:text-white/90 break-words"
+            className="text-base sm:text-lg lg:text-xl font-light leading-tight text-white hover:text-white/90 break-words"
             onClick={handlePostClick}
             role="button"
             tabIndex={0}
@@ -273,7 +339,9 @@ export const PostCard: React.FC<PostCardProps> = ({
           >
             {post.title}
           </h3>
-          <p className="text-sm leading-relaxed text-white/70 break-words">{post.content}</p>
+          <p className="text-[0.85rem] sm:text-sm leading-relaxed text-white/70 break-words line-clamp-4 sm:line-clamp-none">
+            {post.content}
+          </p>
 
           {post.imageUrl && (
             <div className="overflow-hidden rounded-2xl border border-white/8">
@@ -293,7 +361,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-4 text-xs text-white/50">
+        <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 text-[0.7rem] sm:text-xs text-white/50">
           <span className="flex items-center gap-2">
             <span className="h-1 w-5 rounded-full bg-white/20" />
             {post.totalVotes} pulse
@@ -301,13 +369,13 @@ export const PostCard: React.FC<PostCardProps> = ({
           <span>{post.commentsCount} replies</span>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2 sm:gap-3 border-t border-white/10 pt-2.5 sm:pt-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="ghost"
               size="sm"
               disabled={!token || isVoting}
-              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] text-white/70 transition ${
+              className={`h-8 sm:h-9 w-10 sm:w-auto rounded-full border border-white/10 px-0 sm:px-3 text-[0.7rem] sm:text-[0.72rem] text-white/70 transition justify-center ${
                 userVote === 'upvote'
                   ? 'bg-white text-black shadow-[0_15px_35px_rgba(255,255,255,0.15)]'
                   : 'hover:border-white/40 hover:text-white'
@@ -317,15 +385,15 @@ export const PostCard: React.FC<PostCardProps> = ({
                 handleUpvote();
               }}
             >
-              <ArrowUp className="mr-2 h-4 w-4" />
-              {localUpvotes}
+              <ArrowUp className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">{localUpvotes}</span>
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
               disabled={!token || isVoting}
-              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] text-white/70 transition ${
+              className={`h-8 sm:h-9 w-10 sm:w-auto rounded-full border border-white/10 px-0 sm:px-3 text-[0.7rem] sm:text-[0.72rem] text-white/70 transition justify-center ${
                 userVote === 'downvote'
                   ? 'bg-white text-black shadow-[0_15px_35px_rgba(255,255,255,0.15)]'
                   : 'hover:border-white/40 hover:text-white'
@@ -335,100 +403,24 @@ export const PostCard: React.FC<PostCardProps> = ({
                 handleDownvote();
               }}
             >
-              <ArrowDown className="mr-2 h-4 w-4" />
+              <ArrowDown className="h-4 w-4" />
               {/* downvote count intentionally hidden per UX */}
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className={`h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition ${
+              className={`h-8 sm:h-9 w-10 sm:w-auto rounded-full border border-white/10 px-0 sm:px-3 text-[0.7rem] sm:text-[0.72rem] transition justify-center ${
                 showComments ? 'bg-white text-black' : 'text-white/70 hover:text-white'
               }`}
               onClick={handleCommentClick}
             >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              {post.commentsCount}
+              <MessageCircle className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">{post.commentsCount}</span>
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white"
-              onClick={handlePostClick}
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              View
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white"
-              onClick={(e) => {
-                handleActionClick(e);
-                onShare?.(post._id);
-              }}
-            >
-              <Share className="h-4 w-4" />
-            </Button>
-
-            {/* Delete button - visible only to post owner */}
-            {(() => {
-              try {
-                const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
-                if (currentUser && currentUser._id && post.user && post.user._id && currentUser._id === post.user._id) {
-                  return (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 rounded-full border border-white/10 px-3 text-[0.72rem] transition hover:text-white text-destructive"
-                        onClick={(e) => {
-                          handleActionClick(e);
-                          setIsDeleteOpen(true);
-                        }}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-
-                      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete post</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action will permanently delete the post and its associated comments and votes. Do you want to continue?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <div className="mt-4 flex items-center justify-center gap-3 sm:justify-end">
-                            <AlertDialogCancel onClick={() => setIsDeleteOpen(false)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={async () => {
-                                try {
-                                  await dispatch(deletePost(post._id));
-                                  setIsDeleteOpen(false);
-                                  onDelete?.(post._id);
-                                  if (!onDelete) navigate('/');
-                                } catch (err) {
-                                  console.error('Failed to delete post', err);
-                                }
-                              }}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </div>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </>
-                  );
-                }
-              } catch (e) {
-                // ignore parse errors
-              }
-              return null;
-            })()}
           </div>
         </div>
 
@@ -444,6 +436,35 @@ export const PostCard: React.FC<PostCardProps> = ({
             onClose={onCloseComments || (() => {})}
           />
         </div>
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete post</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will permanently delete the post and its associated comments and votes. Do you want to continue?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="mt-4 flex items-center justify-center gap-3 sm:justify-end">
+              <AlertDialogCancel onClick={() => setIsDeleteOpen(false)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  try {
+                    await dispatch(deletePost(post._id));
+                    setIsDeleteOpen(false);
+                    onDelete?.(post._id);
+                    if (!onDelete) navigate('/');
+                  } catch (err) {
+                    console.error('Failed to delete post', err);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </article>
   );

@@ -204,7 +204,7 @@ export const Navbar = () => {
                         <User className="h-4 w-4" />
                         {user && (
                           <span className="max-w-32 truncate text-sm">
-                            {user.username || (user.email ? user.email.split('@')[0] : '')}
+                            {user.username || ''}
                           </span>
                         )}
                       </Button>
